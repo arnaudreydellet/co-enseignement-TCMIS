@@ -1,1385 +1,636 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Franchissement de deux tubes — trouver la cote H</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f2f6fc">
+<title>Atelier de géométrie — Terminale CAP CMIS</title>
 <style>
-/* =====================================================================
-   1. Jetons de design
-   ===================================================================== */
-:root{
-  --bg:#eef1f5; --surface:#fff; --ink:#1e2a36; --muted:#5b6b7c; --line:#d4dce5;
-  --blue:#1f4f7d; --blue-ink:#163a5c; --blue-soft:#e4edf6;
-  --copper:#c27a3f; --copper-dark:#8c5327; --copper-light:#efc494; --steel:#8d98a4;
-  --ok:#2a7a4b; --ok-soft:#e2f1e7; --err:#c4504f; --err-soft:#f9e7e6; --warn:#b0741c; --warn-soft:#fbf1dc;
-  --radius:6px;
-  --font:"Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
-}
+:root{--blue:#1769db;--blue-dark:#1055bd;--ink:#193954;--muted:#71859b;--line:#d9e5f3;--blue-pale:#eaf3ff;--surface:#fff;--bg:#f1f5fb;--focus:#e3f0ff;--shadow:0 12px 38px rgba(34,66,109,.09)}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.45}
-button,input{font-family:inherit;font-size:inherit}
-.hidden{display:none !important}
+html,body{margin:0;height:100%;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:var(--ink);background:var(--bg)}
+button,input{font:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid #84b5fd;outline-offset:2px}
+button:disabled{opacity:.38;cursor:default}
+.app{height:100dvh;min-height:585px;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:68px;flex-shrink:0;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:20px;padding:0 23px;z-index:10}
+.identity{display:flex;align-items:center;gap:12px;min-width:0}
+.logo{width:40px;height:40px;border-radius:11px;background:var(--blue);color:white;display:grid;place-items:center;flex-shrink:0;box-shadow:0 4px 10px #1769db25}
+.logo svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.85;stroke-linecap:round;stroke-linejoin:round}
+.title h1{font-size:18px;line-height:1.1;margin:0 0 5px;font-weight:800;letter-spacing:-.45px}
+.title p{font-size:12px;color:var(--muted);margin:0}
+.header-tools{display:flex;align-items:center;gap:7px}
+.topbtn{height:38px;border:1px solid #dce6f2;background:#fff;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;color:#344f6e;font-size:13px;font-weight:700;white-space:nowrap;transition:background .18s,border .18s}
+.topbtn:hover:not(:disabled){background:#eef5ff;border-color:#c4d7ef}
+.topbtn svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.topbtn.icononly{padding:0;width:38px}
+.topbtn.blue{background:var(--blue);border-color:var(--blue);color:white}
+.topbtn.blue:hover{background:var(--blue-dark)}
+.divisor{height:22px;width:1px;background:var(--line);margin:0 4px}
+.layout{display:grid;grid-template-columns:104px minmax(0,1fr) 275px;gap:17px;flex:1;min-height:0;padding:17px}
+.toolrail{background:#fff;border:1px solid var(--line);box-shadow:0 2px 16px #17375e05;border-radius:16px;padding:12px 8px;display:flex;flex-direction:column;align-items:stretch;gap:6px;overflow:auto;scrollbar-width:thin}
+.rail-label{font-size:10px;color:#8da0b5;font-weight:800;text-align:center;letter-spacing:1.05px;padding:1px 0 8px}
+.tool{min-height:68px;background:transparent;border:1px solid transparent;color:#526b89;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;transition:background .18s, border .18s,color .18s}
+.tool:hover{background:#f2f7ff}
+.tool.active{background:#eaf3ff;border-color:#c5dbfa;color:var(--blue)}
+.tool svg{height:24px;width:24px;stroke:currentColor;stroke-width:1.75;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.tool span{font-size:11px;font-weight:750}
+.workarea{min-width:0;display:flex;flex-direction:column;gap:11px;min-height:0}
+.workspace-head{min-height:43px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0}
+.worktitle{display:flex;align-items:center;gap:9px;min-width:0}
+.worktitle strong{font-size:14px;white-space:nowrap}
+.pill{background:#fff;border:1px solid var(--line);border-radius:30px;font-size:11px;font-weight:750;color:#607b9a;padding:6px 10px;white-space:nowrap}
+.chips{display:flex;gap:9px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.switch{display:flex;align-items:center;gap:7px;font-size:12px;color:#526f8f;font-weight:650;cursor:pointer;white-space:nowrap;user-select:none}
+.switch input{appearance:none;-webkit-appearance:none;width:29px;height:17px;background:#cfdbe9;border-radius:20px;position:relative;margin:0;transition:background .18s;cursor:pointer;flex-shrink:0}
+.switch input:after{content:"";position:absolute;width:11px;height:11px;top:3px;left:3px;border-radius:100%;background:#fff;transition:transform .18s}
+.switch input:checked{background:var(--blue)}
+.switch input:checked:after{transform:translateX(12px)}
+.paper-enclosure{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:10px;border-radius:15px;border:1px solid var(--line);background:repeating-linear-gradient(135deg,#eaf0f8 0,#eaf0f8 10px,#edf3fb 10px,#edf3fb 20px);overflow:auto}
+.paper{width:min(100%,calc((100dvh - 245px)*1.4142857));max-height:100%;aspect-ratio:297/210;background:#fff;box-shadow:0 12px 40px #173e6c23,0 2px 5px #16395713;outline:1px solid #cad7e5;position:relative;flex-shrink:0;touch-action:none}
+.paper svg{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none;user-select:none;-webkit-user-select:none}
+.paper svg.tool-eraser{cursor:cell}.paper svg.tool-select{cursor:grab}.paper svg.tool-select.dragging{cursor:grabbing}
+.paper:fullscreen{width:100vw;max-height:100vh;height:auto;aspect-ratio:297/210;margin:auto;background:#fff}
+.paper:fullscreen svg{height:100%}
+.paper-enclosure:fullscreen{border:0;border-radius:0;background:#eaf0f8;padding:20px}
+.paper-enclosure:fullscreen .paper{width:min(calc(100vw - 40px),calc((100vh - 40px)*1.4142857));max-height:calc(100vh - 40px)}
+#sheet .canvas-tool-guide{pointer-events:none}
+.status{height:42px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border-radius:10px;border:1px solid var(--line);padding:0 13px}
+.statusmessage{min-width:0;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:650;color:#4b6888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.statusmark{width:7px;height:7px;background:#1769db;border-radius:100%;flex-shrink:0}
+.coordinates{font-size:11px;font-weight:700;color:#8b9fb5;white-space:nowrap;font-variant-numeric:tabular-nums}
+.inspector{min-height:0;background:#fff;border:1px solid var(--line);border-radius:16px;display:flex;flex-direction:column;overflow-y:auto;scrollbar-width:thin;padding:18px}
+.inspector-kicker{font-size:10px;letter-spacing:1.1px;font-weight:850;color:#899fb7;margin-bottom:13px}
+.inspector-head{display:flex;align-items:center;gap:11px;margin-bottom:10px}
+.inspector-icon{width:40px;height:40px;background:var(--blue-pale);border-radius:10px;display:grid;place-items:center;color:var(--blue)}
+.inspector-icon svg{width:24px;height:24px;stroke:currentColor;stroke-width:1.75;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.inspector-head h2{margin:0;font-size:19px;letter-spacing:-.5px}
+.tool-desc{font-size:13px;color:#5b7694;line-height:1.6;margin:0 0 16px}
+.optiontitle{font-size:11px;color:#8a9fb6;text-transform:uppercase;letter-spacing:.6px;font-weight:850;margin:17px 0 9px}
+.divider{height:1px;background:var(--line);margin:5px 0 0}
+.segmented{display:flex;border:1px solid #d7e5f4;padding:3px;border-radius:10px;gap:3px;background:#f8fbff}
+.seg{flex:1;border:0;border-radius:7px;background:transparent;padding:8px 4px;font-size:12px;font-weight:750;color:#6b819a}
+.seg.active{background:var(--blue);color:white}
+.colors{display:flex;gap:12px;align-items:center;margin:3px 0}
+.color{width:27px;height:27px;background:var(--swatch);border:3px solid white;box-shadow:0 0 0 1px #d3e1f0;border-radius:50%;padding:0}
+.color.active{box-shadow:0 0 0 2px var(--blue)}
+.label{font-size:12px;color:#536e8c;font-weight:750;margin-bottom:7px;display:block}
+.numberrow{display:flex;align-items:center;gap:8px}
+.numinput{height:39px;border:1px solid #cbdced;border-radius:8px;padding:0 9px;width:93px;color:#193954;font-weight:800;background:#fff}
+.unit{font-size:12px;color:#8497ab}
+.inlinecheck{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:650;color:#456687;cursor:pointer}
+.inlinecheck input{accent-color:var(--blue);width:16px;height:16px}
+.helper{font-size:12px;line-height:1.5;color:#7f96ae;margin-top:8px}
+.smallblue{border:1px solid #c7d9ef;background:#f3f8ff;padding:10px 12px;border-radius:9px;color:#1f64b4;font-weight:750;font-size:12px;width:100%;text-align:left;margin-top:9px}
+.inspector-bottom{margin-top:auto;padding-top:22px}
+.info-box{border-radius:10px;background:#f5f9ff;border:1px solid #dce9fa;padding:12px 13px;font-size:12px;line-height:1.6;color:#547396}
+.info-box strong{display:block;color:#265b93;margin-bottom:3px}
+.kbd{background:#fff;border:1px solid #d7e4f3;padding:1px 5px;border-radius:5px;color:#4d6f91;font-size:11px}
+.presetrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}
+.preset{background:#fff;border:1px solid #d6e3f1;border-radius:7px;padding:7px 10px;font-size:12px;font-weight:700;color:#587390}
+.preset.active{background:#e9f3ff;border-color:#b4d0f4;color:var(--blue)}
+.toast{position:fixed;left:50%;bottom:28px;z-index:50;transform:translate(-50%,15px);opacity:0;pointer-events:none;background:#173a60;color:white;border-radius:11px;padding:12px 19px;font-size:13px;font-weight:650;box-shadow:0 10px 28px #16345630;transition:opacity .2s,transform .2s;max-width:95vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.hidden{display:none!important}
+@media(max-width:1240px){.layout{grid-template-columns:90px minmax(0,1fr) 245px;gap:11px;padding:12px}.toolrail{padding:9px 5px}.tool{min-height:61px}.paper{width:min(100%,calc((100dvh - 230px)*1.4142857))}.header-tools .topbtn span{display:none}.header-tools .topbtn{width:38px;padding:0}.header-tools .topbtn.blue span{display:inline}.header-tools .topbtn.blue{width:auto;padding:0 12px}}
+@media(max-width:920px){.layout{grid-template-columns:75px minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}.inspector{grid-column:1/-1;grid-row:2;max-height:208px;overflow:auto;padding:13px 16px;display:block}.inspector-head,.inspector-kicker{display:inline-flex;vertical-align:middle;margin-right:12px}.inspector-head h2{font-size:15px}.tool-desc{display:inline-block;max-width:60%;vertical-align:middle;margin:0}.inspector-options{display:flex;align-items:center;flex-wrap:wrap;gap:0 18px}.inspector-bottom{display:none}.inspector .optiontitle{margin:10px 0 7px}.inspector .divider{display:none}.paper{width:min(100%,calc((100dvh - 370px)*1.4142857))}.workspace-head{flex-wrap:wrap}.chips{justify-content:flex-start}}
+@media(max-width:680px){.app{min-height:0;overflow:auto;height:auto;min-height:100dvh}.topbar{height:auto;min-height:65px;padding:11px 13px;flex-wrap:wrap;gap:11px}.title h1{font-size:16px}.header-tools{width:100%;justify-content:space-between;gap:4px}.header-tools .topbtn.blue span{display:inline}.layout{display:flex;flex-direction:column;gap:9px;padding:10px}.toolrail{order:1;display:flex;flex-direction:row;gap:4px;padding:7px;overflow-x:auto;flex-shrink:0;border-radius:12px}.rail-label{display:none}.tool{width:77px;min-width:67px;min-height:60px;flex-shrink:0;gap:3px}.tool svg{height:20px;width:20px}.tool span{font-size:10px}.workarea{order:2;min-height:0}.workspace-head{gap:8px}.workspace-head .chips{gap:7px}.worktitle strong{font-size:12px}.paper-enclosure{padding:8px;overflow:visible}.paper{width:100%;max-height:none}.status{height:auto;min-height:39px}.statusmessage{font-size:11px}.coordinates{font-size:10px}.inspector{order:3;max-height:none;display:block}.inspector-head{display:flex;margin-bottom:8px}.inspector-kicker{display:block}.tool-desc{display:block;max-width:none;margin-bottom:11px}.inspector-options{display:block}.inspector-bottom{display:none}.info-box{display:none}.paper-enclosure:fullscreen{padding:3px}.paper-enclosure:fullscreen .paper{width:min(100vw,calc(100vh*1.4142857));max-height:100vh}}
+@media(print){@page{size:A4 landscape;margin:0}html,body,.app{margin:0;padding:0;width:297mm;height:210mm;overflow:visible;background:#fff}.topbar,.toolrail,.workspace-head,.status,.inspector{display:none!important}.layout,.workarea,.paper-enclosure{display:block!important;margin:0;padding:0!important;border:0!important;background:#fff!important;box-shadow:none!important;width:297mm!important;height:210mm!important}.paper{display:block!important;margin:0!important;border:0!important;outline:0!important;box-shadow:none!important;width:297mm!important;height:210mm!important;max-width:none!important;max-height:none!important;aspect-ratio:297/210!important}#previewLayer,#referenceLayer,#cursorLayer{display:none!important}}
 
-/* =====================================================================
-   2. Mise en page : une seule colonne, le dessin puis la question
-   ===================================================================== */
-.app{max-width:1040px;margin:0 auto;padding:22px 20px 40px}
-.topbar{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}
-.topbar h1{font-size:1.3rem;font-weight:600;margin:0 0 3px}
-.topbar p{margin:0;color:var(--muted);font-size:.95rem}
-
-.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 16px;border-radius:var(--radius);cursor:pointer;transition:background .15s,border-color .15s}
-.btn:hover{background:#f4f7fa;border-color:#bfc9d4}
-.btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
-.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
-.btn.primary:hover{background:var(--blue-ink)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-
-.steps{display:flex;list-style:none;padding:0;margin:0 0 14px;border:1px solid var(--line);background:var(--surface);border-radius:var(--radius);overflow:hidden}
-.steps li{flex:1;display:flex;align-items:center;gap:9px;padding:9px 14px;border-right:1px solid var(--line);color:var(--muted);font-size:.92rem;user-select:none}
-.steps li:last-child{border-right:0}
-.steps li .n{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:.8rem;font-weight:600;flex:none}
-.steps li.done{color:var(--ink)}
-.steps li.done .n{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
-.steps li.current{color:var(--blue-ink);background:var(--blue-soft);font-weight:600}
-.steps li.current .n{background:var(--blue);border-color:var(--blue);color:#fff}
-
-.visual{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:8px}
-.visual svg{display:block;width:100%;height:auto}
-
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 20px 18px;margin-top:14px}
-.panel h2{margin:0 0 8px;font-size:1.05rem;font-weight:600;color:var(--blue-ink)}
-.panel .info{margin:0 0 10px;color:var(--ink)}
-.panel .question{margin:0 0 12px;font-size:1.08rem;font-weight:600;border-left:4px solid var(--blue);padding:8px 14px;background:var(--blue-soft);border-radius:0 var(--radius) var(--radius) 0}
-.answer{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.answer input{width:110px;font-size:1.2rem;font-weight:600;padding:7px 10px;border:1px solid var(--line);border-radius:var(--radius);text-align:right;color:var(--ink)}
-.answer input:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
-.answer input:disabled{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
-.answer .unit{font-size:1.1rem;margin-right:6px}
-
-.feedback{margin:12px 0 0;padding:10px 14px;border-radius:var(--radius);border:1px solid;font-size:1rem}
-.feedback.err{background:var(--err-soft);border-color:#ebbdbc;color:#8b3231}
-.feedback.ok{background:var(--ok-soft);border-color:#b8dcc5;color:#1f5a38;font-weight:600}
-.feedback.hint{background:var(--warn-soft);border-color:#ebd6a8;color:#7a4f0e}
-.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-
-/* =====================================================================
-   3. Styles SVG
-   ===================================================================== */
-svg text{font-family:var(--font);fill:var(--ink)}
-.lbl{fill:var(--muted)}
-.cote line{stroke:var(--blue-ink);stroke-width:1}
-.cote line.ext{stroke-width:.6;stroke-dasharray:3 2;opacity:.75}
-.cote text{font-weight:600;fill:var(--blue-ink)}
-.cote.q text{fill:var(--blue);font-weight:700}
-.cote.q line{stroke:var(--blue);stroke-width:1.4}
-.cote.ok line{stroke:var(--ok)} .cote.ok text{fill:var(--ok)}
-.cote.warn line{stroke:var(--warn)} .cote.warn text{fill:var(--warn)}
-.cote.grey line{stroke:var(--steel)} .cote.grey text{fill:var(--steel)}
-.fade{opacity:0;transition:opacity .8s ease}
-.fade.in{opacity:1}
-.axis{stroke:var(--blue-ink);stroke-width:.8;stroke-dasharray:8 3 1.5 3;fill:none}
-.level{fill:none;stroke-width:1.4}
-.level.grey{stroke:var(--steel);stroke-dasharray:5 4}
-.level.ok{stroke:var(--ok)}
-.level.q{stroke:var(--blue);stroke-dasharray:5 4}
-.jeu-band{fill:var(--warn);opacity:.2}
-.radius{stroke:var(--blue);stroke-width:2.2}
-.dot{fill:var(--blue-ink)}
-
-.obs .stem{fill:var(--steel)}
-.obs .ring{fill:none;stroke:var(--steel);stroke-width:6}
-.obs .body{fill:var(--copper);stroke:var(--copper-dark);stroke-width:1.5}
-.obs .shine{fill:var(--copper-light);opacity:.5}
-.tube-edge{fill:none;stroke:var(--copper-dark);stroke-linejoin:round}
-.tube-base{fill:none;stroke:var(--copper);stroke-linejoin:round}
-.tube-shine{fill:none;stroke:var(--copper-light);stroke-linejoin:round;opacity:.55}
-.ghost rect{fill:none;stroke:var(--blue);stroke-width:1.2;stroke-dasharray:6 4}
-
-/* Étape 3 (départ du cintrage) : le regard sur la première montée */
-svg.focus-depart #obs1,svg.focus-depart #obs2,svg.focus-depart #tubeBent,svg.focus-depart > .axis,svg.focus-depart > .dot{opacity:.22;transition:opacity 1s ease}
-#tubeBent,#obs1,#obs2{transition:opacity 1s ease}
-.tri{fill:var(--blue);fill-opacity:.13;stroke:var(--blue);stroke-width:1.6;stroke-linejoin:round}
-.tri-side{stroke:var(--blue);stroke-width:1.6;fill:none}
-.tri-hyp{stroke:var(--blue);stroke-width:1.6;stroke-dasharray:10 4 2 4;fill:none}   /* l'hypoténuse est l'axe du tube */
-/* Étape 4 (longueur oblique) : côtés connus en gris calme, hypoténuse seule inconnue */
-.tri-side.known{stroke:var(--steel);stroke-width:2.5;stroke-linecap:round;transition:stroke .8s,stroke-width .8s}
-.tri-lbl.known{fill:var(--steel);transition:fill .8s}
-.tri-hyp.q{stroke:var(--blue);stroke-width:3;stroke-dasharray:8 5;transition:stroke .8s,stroke-width .8s}
-.tri-hyp.ok{stroke:var(--ok);stroke-width:5;stroke-dasharray:none;stroke-linecap:round}
-.ra.lit{stroke:var(--blue);stroke-width:3;fill:#e4edf6}
-.pt-lbl{font-size:15px;font-weight:700;fill:var(--blue-ink);paint-order:stroke;stroke:#fff;stroke-width:3px}
-.hyp-lbl{font-size:16px;font-weight:700;fill:var(--blue);paint-order:stroke;stroke:#fff;stroke-width:4px;transition:opacity .6s}
-.hyp-lbl.ok{fill:var(--ok)}
-/* Étape 5 (les deux montées) : illumination brève d'une oblique, annotation commune */
-.flash{stroke:var(--blue);stroke-width:16;stroke-linecap:round;opacity:0;animation:flashSeg 1s ease-in-out}
-@keyframes flashSeg{50%{opacity:.4}}
-.brace{stroke:var(--ok);stroke-width:1.6;fill:none}
-.brace-lbl{font-size:15px;font-weight:600;fill:var(--ok)}
-/* Étape 6 (tracé sur le tube) : vue établi */
-#scene,#etabli{transition:opacity .8s ease}
-.et-obs circle.body{fill:var(--copper-light);fill-opacity:.35;stroke:var(--steel);stroke-width:1.5;transition:fill .9s,fill-opacity .9s,stroke .9s}
-.et-obs.solid circle.body{fill:var(--copper);fill-opacity:1;stroke:var(--copper-dark)}
-.et-obs circle.ring{fill:none;stroke:var(--steel);stroke-width:4;opacity:.35;transition:opacity .9s}
-.et-obs.solid circle.ring{opacity:1}
-.et-obs.hit circle.body{stroke:var(--err);stroke-width:4}
-.et-lbl{font-size:13px;fill:var(--muted)}
-.ruler{fill:#fbfcfd;stroke:var(--line)}
-.tick{stroke:var(--ink);stroke-width:1}
-.tick-lbl{font-size:12px;fill:var(--ink);font-weight:600}
-.ref-line{stroke:var(--blue);stroke-width:1.4;stroke-dasharray:6 4}
-.ref-lbl{font-size:13px;font-weight:600;fill:var(--blue)}
-.guide{stroke:var(--blue);stroke-width:1;opacity:.45;pointer-events:none}
-.pencil{stroke:#2b2b2b;stroke-width:1.6;stroke-linecap:round;opacity:.75;transition:stroke-width .6s,opacity .6s}
-.pencil.net{stroke-width:2.6;opacity:1}
-.pencil-lbl{font-size:14px;font-weight:600;fill:var(--blue-ink);paint-order:stroke;stroke:#fff;stroke-width:3px}
-.pencil-lbl.ok{fill:var(--ok)}
-.et-note{font-size:14px;font-weight:600;fill:var(--err)}
-.tri-side.ok{stroke:var(--ok);stroke-width:5;stroke-linecap:round}
-.tri-lbl{font-size:14px;font-weight:600;fill:var(--blue-ink)}
-.tri-lbl.q{fill:var(--blue);font-weight:700;font-size:16px}
-.tri-lbl.ok{fill:var(--ok)}
-.tri-name{font-size:12px;fill:var(--muted)}
-.mark{fill:var(--ok)}
-.mark-lbl{font-size:13px;font-weight:600;fill:var(--ok)}
-
-@media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
-/* =====================================================================
-   Couche « missions » : page d'accueil, sauvegarde et reprise
-   ===================================================================== */
-/* Accueil : trame technique très discrète en fond */
-.home{max-width:1080px;margin:0 auto;padding:36px 22px 56px;position:relative}
-body.at-home{background:
-  linear-gradient(to right, rgba(31,79,125,.045) 1px, transparent 1px),
-  linear-gradient(to bottom, rgba(31,79,125,.045) 1px, transparent 1px),
-  var(--bg);background-size:32px 32px,32px 32px,auto}
-.home .brand{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;margin:0 0 16px}
-.home .brand::before{content:"";width:22px;height:2px;background:var(--blue)}
-
-/* 1. bandeau d'accueil */
-.hero{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:40px;align-items:center;background:linear-gradient(135deg,#ffffff 0%,#f6f9fc 100%);border:1px solid var(--line);border-radius:16px;padding:52px 48px;box-shadow:0 10px 30px rgba(22,58,92,.06),0 1px 2px rgba(22,58,92,.05)}
-.hero h1{margin:0 0 12px;font-size:clamp(1.7rem,2.9vw,2.15rem);line-height:1.15;font-weight:700;color:var(--blue-ink);letter-spacing:-.01em}
-.hero .lead{margin:0;font-size:1.15rem;line-height:1.5;color:var(--muted);max-width:32rem}
-.hero .art{justify-self:end}
-.hero .art svg{display:block;width:300px;height:auto}
-
-/* 2. missions */
-.section{margin-top:34px}
-.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin:0 0 14px}
-.section-head h2{margin:0;font-size:1.15rem;font-weight:600;color:var(--blue-ink)}
-.section-head span{color:var(--muted);font-size:.9rem}
-.mission-card{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:24px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:26px 28px;box-shadow:0 1px 2px rgba(22,58,92,.05);transition:border-color .2s,box-shadow .2s,transform .2s;margin-bottom:12px}
-.mission-card:hover{border-color:#9db6cf;box-shadow:0 12px 28px rgba(22,58,92,.10);transform:translateY(-1px)}
-.mission-card .thumb{width:76px;height:76px;border-radius:12px;background:var(--blue-soft);display:grid;place-items:center;flex:none}
-.mission-card .thumb svg{width:52px;height:52px;display:block}
-.mission-card .num{font-size:.76rem;letter-spacing:.12em;color:var(--blue);text-transform:uppercase;font-weight:700}
-.mission-card h3{margin:5px 0 6px;font-size:1.45rem;font-weight:600;color:var(--blue-ink);letter-spacing:-.01em}
-.mission-card p{margin:0;color:var(--muted);font-size:1rem}
-.mission-card .meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;color:var(--muted);font-size:.85rem}
-.mission-card .meta span::before{content:"·";margin-right:14px;color:#b7c3cf}
-.mission-card .meta span:first-child::before{content:none;margin:0}
-.mission-card .side{display:flex;flex-direction:column;align-items:flex-end;gap:12px;flex:none}
-.status{font-size:.8rem;font-weight:600;padding:4px 11px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:#fff}
-.status.progress{background:var(--blue-soft);border-color:#b9cde2;color:var(--blue)}
-.status.done{background:var(--ok-soft);border-color:#b8dcc5;color:var(--ok)}
-.btn.big{padding:12px 24px;font-size:1.02rem;font-weight:600;border-radius:9px}
-
-/* 3. reprendre */
-.resume-card{margin-top:18px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center;background:#fbfcfd;border:1px dashed #c3d0dd;border-radius:14px;padding:22px 28px}
-.resume-card h3{margin:0 0 4px;font-size:1.05rem;font-weight:600;color:var(--blue-ink)}
-.resume-card p{margin:0;color:var(--muted);font-size:.95rem}
-.resume-card .help{margin-top:6px;font-size:.84rem;color:#8593a1}
-.resume-card .help code{font-family:inherit;color:var(--blue-ink)}
-.home-err{margin-top:12px;padding:10px 14px;border-radius:var(--radius);border:1px solid #ebbdbc;background:var(--err-soft);color:#8b3231}
-.home-foot{margin-top:36px;color:#8593a1;font-size:.82rem;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-
-@media (max-width:820px){
-  .hero{grid-template-columns:1fr;padding:32px 28px}
-  .hero .art{display:none}
-  .hero h1{font-size:1.9rem}
-  .mission-card{grid-template-columns:auto minmax(0,1fr)}
-  .mission-card .side{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between}
-  .resume-card{grid-template-columns:1fr}
-}
-@media (max-width:520px){
-  .home{padding:24px 14px 40px}
-  .hero{padding:26px 20px}
-  .hero h1{font-size:1.6rem}
-  .mission-card{padding:20px}
-  .mission-card .thumb{width:56px;height:56px}
-  .mission-card .thumb svg{width:40px;height:40px}
-  .mission-card h3{font-size:1.2rem}
-  .mission-card .meta{flex-direction:column;gap:4px}
-  .mission-card .meta span::before{content:none;margin:0}
-}
-.topbar .tools{display:flex;gap:8px;flex:none;justify-content:flex-end;align-items:flex-start}
-.topbar > div:first-child{min-width:0}
-.btn.quiet{border-color:transparent;background:transparent;color:var(--muted);padding-left:6px;padding-right:6px}
-.btn.quiet:hover{background:#f4f7fa;color:var(--ink)}
-.save-note{margin:0 0 14px;padding:10px 14px;border-radius:var(--radius);border:1px solid #b8dcc5;background:var(--ok-soft);color:#1f5a38;font-size:.95rem}
-.save-note b{display:block}
-@media (max-width:640px){.mission-card{flex-direction:column;align-items:flex-start}.mission-card .side{align-items:flex-start}}
+/* Guided geometric construction: integrated into the existing A4 drawing atelier. */
+.layout{grid-template-columns:88px minmax(0,1fr) 354px;gap:13px;padding:13px}
+.toolrail{padding:10px 5px}
+.tool{min-height:62px}
+.inspector{padding:0;gap:0;background:#fff;overflow:auto}
+.mission-panel{padding:18px 18px 14px;background:#fff;border-bottom:1px solid #e1eaf4;flex-shrink:0}
+.mission-top{display:flex;justify-content:space-between;align-items:center;gap:9px;margin-bottom:12px}
+.mission-kicker{color:#1769db;font-size:11px;font-weight:850;letter-spacing:.9px}
+.mission-count{font-size:11px;font-weight:850;color:#597995;background:#f2f7ff;border:1px solid #dce9fb;border-radius:40px;padding:5px 9px}
+.mission-track{height:5px;border-radius:8px;background:#e1eaf6;overflow:hidden;margin-bottom:17px}
+.mission-fill{background:#1769db;height:100%;width:0;transition:width .3s ease}
+.mission-phase{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#7290b2;margin-bottom:7px}
+.mission-title{font-size:19px;line-height:1.23;letter-spacing:-.4px;font-weight:850;margin:0 0 11px;color:#183b60}
+.mission-instruction{font-size:15px;line-height:1.55;color:#263f5d;margin:0 0 15px}
+.mission-tool-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.mission-tool{font-size:11px;color:#35618e;background:#edf5ff;border:1px solid #d5e6fa;border-radius:30px;padding:5px 9px;font-weight:800}
+.mission-prepare{font-size:11px;font-weight:750;color:#1769db;background:white;border:1px solid #c9def7;border-radius:7px;padding:7px 9px}
+.mission-hint{background:#f7faff;border:1px solid #e0eafa;border-radius:8px;padding:11px 12px;font-size:12px;line-height:1.55;color:#3b638c;margin:5px 0 13px;animation:mission-in .2s ease-out}
+.mission-hint-toggle{font-size:12px;font-weight:700;color:#4c77a5;border:0;padding:1px 0;background:transparent;margin:1px 0 12px;text-align:left}
+.mission-answer{margin:0 0 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mission-answer label{font-size:12px;font-weight:700;color:#53718f;width:100%}
+.mission-answer input{height:41px;border-radius:9px;border:1px solid #bed3ec;color:#183958;background:white;padding:0 11px;width:144px;font-size:16px;font-weight:750}
+.mission-answer .unit{font-weight:700}
+.mission-answer select{border:1px solid #bed3ec;background:#fff;padding:9px;border-radius:8px;width:100%;color:#274764;font-weight:600}
+.mission-feedback{font-size:12px;line-height:1.5;padding:11px 12px;border-radius:9px;margin:10px 0 0;border:1px solid #f5d6a2;color:#8b5310;background:#fff8e9;animation:mission-in .25s ease-out}
+.mission-feedback.success{border-color:#b6e6d1;color:#146b50;background:#edf9f3}
+.mission-main-btn{background:#1769db;border:1px solid #1769db;border-radius:9px;color:white;padding:12px 13px;width:100%;font-size:14px;font-weight:850;min-height:44px}
+.mission-main-btn.done{background:#098b64;border-color:#098b64}
+.mission-nav{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:9px}
+.mission-nav button{background:white;border:1px solid #d8e5f4;border-radius:8px;padding:8px 11px;font-size:12px;font-weight:750;color:#4e6e8e}
+.mission-nav button:disabled{opacity:.32;cursor:not-allowed}
+.mission-finished{border:1px solid #b6e6d1;background:#f0fbf6;border-radius:11px;padding:16px;margin:4px 0}
+.mission-finished h2{color:#08734d;font-size:21px;margin:0 0 10px}
+.mission-finished p{font-size:14px;line-height:1.5;margin:0 0 8px}
+.tool-settings-box{display:block;border-top:1px solid #e1eaf4;background:#fff}
+.tool-settings-box>summary{padding:13px 18px;color:#385f8d;font-size:13px;font-weight:800;cursor:pointer;user-select:none;background:#f9fbff;position:sticky;top:0;z-index:2}
+.tool-settings-inner{padding:16px 18px 18px}
+.tool-settings-inner .inspector-bottom{margin-top:12px}
+@keyframes mission-in{from{opacity:.35;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.mission-mode-note{font-size:11px;color:#879cb1;margin:9px 0 0}
+.app:fullscreen{height:100vh;min-height:0;width:100vw}
+.inspector-options [data-erase]{font-size:10px;padding:9px 3px;white-space:normal;line-height:1.25}
+@media(max-width:1240px){.layout{grid-template-columns:76px minmax(0,1fr) 310px;gap:9px;padding:10px}.mission-panel{padding:13px}.tool-settings-inner{padding:13px}.mission-title{font-size:17px}.mission-instruction{font-size:14px}}
+@media(max-width:920px){.layout{grid-template-columns:75px minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(235px,auto)}.inspector{grid-row:2;grid-column:1/-1;max-height:310px;padding:0;display:block;overflow:auto}.mission-panel{padding:14px}.tool-settings-box{display:block}.tool-settings-inner{padding:12px}.paper{width:min(100%,calc((100dvh - 485px)*1.4142857))}}
+@media(max-width:680px){.layout{display:flex;flex-direction:column}.inspector{order:1;max-height:none;overflow:visible}.mission-panel{padding:15px}.tool-settings-box{display:block}.tool-settings-inner{padding:12px}.toolrail{order:2}.workarea{order:3}.paper{width:100%;max-height:none}.workspace-head .chips{flex-wrap:wrap}}
+@media(print){.inspector,.mission-panel{display:none!important}}
 </style>
 </head>
 <body>
-
-<!-- ==================================================================
-     Page d'accueil : la liste des missions (cartes rendues par le script)
-     ================================================================== -->
-<div class="home" id="home">
-  <p class="brand">Terminale CMIS · Lycée professionnel</p>
-
-  <!-- 1. bandeau d'accueil -->
-  <section class="hero" aria-label="Présentation">
-    <div>
-      <h1>Co-intervention Maths × CMIS</h1>
-      <p class="lead">Des missions progressives pour relier les mathématiques aux gestes professionnels.</p>
-    </div>
-    <div class="art" aria-hidden="true">
-      <!-- franchissement stylisé : tube cintré, deux tubes en coupe, cotes -->
-      <svg viewBox="0 0 300 190" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <marker id="hArr" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,1 L10,5 L0,9 z" fill="#1f4f7d"/></marker>
-        </defs>
-        <line x1="10" y1="150" x2="290" y2="150" stroke="#98a3ae" stroke-width="1.5"/>
-        <path d="M10,150 L10,170 M30,150 L30,170 M50,150 L50,170 M70,150 L70,170 M90,150 L90,170 M110,150 L110,170 M130,150 L130,170 M150,150 L150,170 M170,150 L170,170 M190,150 L190,170 M210,150 L210,170 M230,150 L230,170 M250,150 L250,170 M270,150 L270,170 M290,150 L290,170" stroke="#d4dce5" stroke-width="1"/>
-        <circle cx="128" cy="120" r="20" fill="#f3e0cc" stroke="#c27a3f" stroke-width="1.5"/>
-        <circle cx="188" cy="120" r="20" fill="#f3e0cc" stroke="#c27a3f" stroke-width="1.5"/>
-        <path d="M128,140 L128,150 M188,140 L188,150" stroke="#98a3ae" stroke-width="3"/>
-        <path d="M10,134 L60,134 Q68,134 74,128 L98,104 Q104,98 112,98 L204,98 Q212,98 218,104 L242,128 Q248,134 256,134 L290,134" fill="none" stroke="#c27a3f" stroke-width="14" stroke-linecap="butt"/>
-        <path d="M10,134 L60,134 Q68,134 74,128 L98,104 Q104,98 112,98 L204,98 Q212,98 218,104 L242,128 Q248,134 256,134 L290,134" fill="none" stroke="#efc494" stroke-width="3" opacity=".6" transform="translate(0,-4)"/>
-        <path d="M60,134 L98,98 L98,134 z" fill="#1f4f7d" fill-opacity=".10" stroke="#1f4f7d" stroke-width="1"/>
-        <line x1="60" y1="134" x2="98" y2="98" stroke="#1f4f7d" stroke-width="1.2" stroke-dasharray="6 3 1.5 3"/>
-        <line x1="270" y1="134" x2="270" y2="98" stroke="#1f4f7d" stroke-width="1" marker-start="url(#hArr)" marker-end="url(#hArr)"/>
-        <text x="276" y="120" font-family="Segoe UI, system-ui, sans-serif" font-size="11" font-weight="600" fill="#163a5c">H</text>
-        <line x1="60" y1="46" x2="98" y2="46" stroke="#1f4f7d" stroke-width="1" marker-start="url(#hArr)" marker-end="url(#hArr)"/>
-        <line x1="60" y1="52" x2="60" y2="128" stroke="#1f4f7d" stroke-width=".6" stroke-dasharray="3 2" opacity=".6"/>
-        <line x1="98" y1="52" x2="98" y2="92" stroke="#1f4f7d" stroke-width=".6" stroke-dasharray="3 2" opacity=".6"/>
-        <text x="79" y="40" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="11" font-weight="600" fill="#163a5c">37</text>
-        <text x="72" y="130" font-family="Segoe UI, system-ui, sans-serif" font-size="9" fill="#1f4f7d">45°</text>
-      </svg>
-    </div>
-  </section>
-
-  <!-- 2. missions -->
-  <section class="section" aria-label="Missions">
-    <div class="section-head"><h2>Missions disponibles</h2><span id="missionCount"></span></div>
-    <div id="missionList"></div>
-  </section>
-
-  <!-- 3. reprendre -->
-  <section class="section" aria-label="Reprendre une mission">
-    <div class="resume-card">
-      <div>
-        <h3>Reprendre une mission</h3>
-        <p>Importe ton PDF de sauvegarde pour reprendre ton travail là où tu l’avais laissé.</p>
-        <p class="help">Fichier attendu : <code>Mission_…_sauvegarde.pdf</code>, généré par le bouton « Enregistrer mon travail » pendant une mission.</p>
-      </div>
-      <button class="btn big" id="btnResume" type="button">Reprendre mon travail</button>
-      <input type="file" id="fileResume" accept=".pdf,application/pdf" style="display:none">
-    </div>
-    <div id="homeErr" class="home-err hidden"></div>
-  </section>
-
-  <p class="home-foot"><span>Co-intervention mathématiques – enseignement professionnel</span><span>Aucun compte, aucune connexion : ton travail se garde dans un PDF.</span></p>
-</div>
-
-<div class="app" id="mission" style="display:none">
-
-  <header class="topbar">
-    <div>
-      <h1>Franchir deux tubes : trouver la cote H</h1>
-      <p>Terminale CMIS · co-intervention maths – enseignement professionnel</p>
-    </div>
-    <div class="tools">
-      <button class="btn quiet" id="btnHome" type="button">← Missions</button>
-      <button class="btn" id="btnSave" type="button">Enregistrer mon travail</button>
-      <button class="btn" id="btnReset" type="button">Réinitialiser</button>
-    </div>
-  </header>
-  <div id="saveNote" class="save-note hidden"></div>
-
-  <ol class="steps" id="steps">
-    <li data-step="1"><span class="n">1</span>Bord du tube existant</li>
-    <li data-step="2"><span class="n">2</span>Jeu de 5 mm</li>
-    <li data-step="3"><span class="n">3</span>Départ du cintrage</li>
-    <li data-step="4"><span class="n">4</span>Longueur oblique</li>
-    <li data-step="5"><span class="n">5</span>Les deux montées</li>
-    <li data-step="6"><span class="n">6</span>Tracé sur le tube</li>
-  </ol>
-
-  <!-- ==============================================================
-       Dessin : coupe, mur en bas. Coordonnées « monde » : 1 mm = 4 px,
-       face du mur à y = 400. Vue rapprochée au début, vue complète à la fin.
-       ============================================================== -->
-  <section class="visual" aria-label="Coupe de l'installation">
-    <svg id="scene" viewBox="140 192 536.7 230" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Coupe : mur, tube existant fixé par un collier">
-      <defs>
-        <pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-          <line x1="0" y1="0" x2="0" y2="10" stroke="#aab4bf" stroke-width="1"/>
-        </pattern>
-        <marker id="arr" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M0,1 L10,5 L0,9 z" fill="#163a5c"/>
-        </marker>
-        <!-- Étape 3 : ne garde que la première montée du tube -->
-        <clipPath id="clipMontee"><rect x="150" y="0" width="230" height="700"/></clipPath>
-        <!-- Étape 5 : la descente symétrique -->
-        <clipPath id="clipDescente"><rect x="660" y="0" width="230" height="700"/></clipPath>
-      </defs>
-
-      <!-- Mur -->
-      <rect x="0" y="400" width="1120" height="260" fill="url(#hatch)"/>
-      <rect x="0" y="400" width="1120" height="260" fill="#dfe5ec" opacity=".35"/>
-      <line x1="0" y1="400" x2="1120" y2="400" stroke="#1e2a36" stroke-width="2"/>
-      <text id="wallLbl" class="lbl" x="140" y="418" font-size="9" font-weight="600">Mur</text>
-
-      <!-- Tube existant n°1 (toujours visible) -->
-      <g class="obs" id="obs1">
-        <rect class="stem" x="394" y="316" width="12" height="84"/>
-        <circle class="ring" cx="400" cy="316" r="49"/>
-        <circle class="body" cx="400" cy="316" r="44"/>
-        <circle class="shine" cx="386" cy="302" r="14"/>
-      </g>
-      <!-- Tube existant n°2 (apparaît seulement à la fin) -->
-      <g class="obs fade" id="obs2">
-        <rect class="stem" x="634" y="316" width="12" height="84"/>
-        <circle class="ring" cx="640" cy="316" r="49"/>
-        <circle class="body" cx="640" cy="316" r="44"/>
-        <circle class="shine" cx="626" cy="302" r="14"/>
-      </g>
-
-      <!-- Axe et centre du tube n°1 -->
-      <line class="axis" x1="300" y1="316" x2="470" y2="316"/>
-      <circle class="dot" cx="400" cy="316" r="2.5"/>
-
-      <!-- Tube à cintrer, plaqué (étape 3, avant cintrage) -->
-      <g id="tubeFlat" class="fade">
-        <rect x="-300" y="343" width="550" height="58" fill="#8c5327"/>
-        <rect x="-300" y="344" width="550" height="56" fill="#c27a3f"/>
-        <rect x="-300" y="352" width="550" height="11" fill="#efc494" opacity=".55"/>
-      </g>
-      <!-- Fantôme du tube écarté de H : sa face inférieure est exactement au niveau 37 (y = 252) -->
-      <g id="ghost" class="ghost fade">
-        <rect x="-300" y="196" width="550" height="56"/>
-      </g>
-
-      <!-- Tube cintré (animation finale) -->
-      <g id="tubeBent" style="display:none">
-        <path class="tube-edge" id="tbEdge" stroke-width="58" pathLength="1000"/>
-        <path class="tube-base" id="tbBase" stroke-width="56" pathLength="1000"/>
-        <path class="tube-shine" id="tbShine" stroke-width="11" pathLength="1000"/>
-      </g>
-
-      <!-- Étape 3 : copie de la première montée, seule partie gardée nette -->
-      <g id="tubeFocus" style="display:none" clip-path="url(#clipMontee)">
-        <path class="tube-edge" stroke-width="58"/>
-        <path class="tube-base" stroke-width="56"/>
-        <path class="tube-shine" stroke-width="11"/>
-      </g>
-      <!-- Étape 5 : copie de la descente symétrique -->
-      <g id="tubeFocus2" class="fade" style="display:none" clip-path="url(#clipDescente)">
-        <path class="tube-edge" stroke-width="58"/>
-        <path class="tube-base" stroke-width="56"/>
-        <path class="tube-shine" stroke-width="11"/>
-      </g>
-
-      <!-- Calques dynamiques -->
-      <g id="levels"></g>
-      <g id="cotes"></g>
-      <g id="hints"></g>
-      <g id="stepDepart"></g>
+<div class="app" id="app">
+<header class="topbar">
+ <div class="identity">
+  <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19 12 3l8 16H4Z"/><path d="M8 19 12 11l4 8"/><path d="M12 3v16"/></svg></div>
+  <div class="title"><h1>Atelier de géométrie</h1><p>Mathématiques · Terminale CAP CMIS</p></div>
+ </div>
+ <div class="header-tools">
+   <button class="topbtn icononly" id="undoBtn" title="Annuler (Ctrl/⌘ + Z)" aria-label="Annuler"><svg viewBox="0 0 24 24"><path d="m9 14-5-5 5-5"/><path d="M4 9h11a6 6 0 0 1 0 12"/></svg></button>
+   <button class="topbtn icononly" id="redoBtn" title="Rétablir (Ctrl/⌘ + Maj + Z)" aria-label="Rétablir"><svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9a6 6 0 0 0 0 12"/></svg></button>
+   <span class="divisor"></span>
+   <button class="topbtn" id="loadBtn" title="Ouvrir un projet sauvegardé"><svg viewBox="0 0 24 24"><path d="M4 9V5h6l2 3h8v12H4Z"/><path d="M4 11h16"/></svg><span>Ouvrir</span></button>
+   <input type="file" accept=".json,application/json" id="fileLoad" class="hidden">
+   <button class="topbtn" id="saveBtn" title="Enregistrer le projet modifiable"><svg viewBox="0 0 24 24"><path d="M5 3h12l3 3v15H4V3Z"/><path d="M8 3v6h8V3M8 21v-8h8v8"/></svg><span>Projet</span></button>
+   <button class="topbtn" id="svgBtn" title="Télécharger un dessin vectoriel SVG"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v5h4M9 12h7M9 16h7"/></svg><span>SVG</span></button>
+   <button class="topbtn blue" id="pngBtn" title="Exporter la feuille en image"><svg viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4"/><path d="M5 17v4h14v-4"/></svg><span>Exporter PNG</span></button>
+   <button class="topbtn icononly" id="printBtn" title="Imprimer en A4 paysage" aria-label="Imprimer"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4V9h16v9h-2"/><path d="M6 15h12v6H6z"/></svg></button>
+   <button class="topbtn icononly" id="fullscreenBtn" title="Plein écran" aria-label="Plein écran"><svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/></svg></button>
+ </div>
+</header>
+<main class="layout">
+ <nav class="toolrail" id="toolrail" aria-label="Outils géométriques">
+  <div class="rail-label">OUTILS</div>
+  <button class="tool active" type="button" data-tool="pen" title="Stylo · P" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="m4 20 4.7-1 11-11.1a2.2 2.2 0 0 0-3.1-3.1L5.6 15.9 4 20Z"/><path d="m14.7 6.7 3.1 3.1M4 20l3.2-.7"/></svg><span>Stylo</span></button>
+  <button class="tool" type="button" data-tool="ruler" title="Règle · R" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="m3 16 13-13 5 5L8 21l-5-5Z"/><path d="m12 7 2.7 2.7M9 10l1.8 1.8M6 13l2.7 2.7"/></svg><span>Règle</span></button>
+  <button class="tool" type="button" data-tool="compass" title="Compas · C" aria-pressed="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><path d="M11 6 5.5 21M13 6 18.5 21M8 14l8-3M4 21h3M17 21h3"/></svg><span>Compas</span></button>
+  <button class="tool" type="button" data-tool="square" title="Équerre · E" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M3 21V3l18 18H3Z"/><path d="M8 16v-5l5 5H8Z"/></svg><span>Équerre</span></button>
+  <button class="tool" type="button" data-tool="protractor" title="Rapporteur · A" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M3 18a9 9 0 0 1 18 0H3Z"/><path d="M12 18V9M6 18l2.2-5.5M18 18l-2.2-5.5M12 18l6-6"/></svg><span>Rapporteur</span></button>
+  <button class="tool" type="button" data-tool="point" title="Point · M" aria-pressed="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></svg><span>Point</span></button>
+  <button class="tool" type="button" data-tool="eraser" title="Gomme · G" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="m4 14 9.5-9.5a2 2 0 0 1 2.8 0l4.2 4.2a2 2 0 0 1 0 2.8L12 20H7.5L4 16.5a1.8 1.8 0 0 1 0-2.5Z"/><path d="m9 9 7 7M12 20h9"/></svg><span>Gomme</span></button>
+  <button class="tool" type="button" data-tool="select" title="Déplacer · V" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M8 6l4-4 4 4M8 18l4 4 4-4M6 8l-4 4 4 4M18 8l4 4-4 4"/></svg><span>Déplacer</span></button>
+ </nav>
+ <section class="workarea">
+  <div class="workspace-head">
+   <div class="worktitle"><strong>Feuille de construction</strong><span class="pill">A4 paysage · 29,7 × 21 cm</span></div>
+   <div class="chips">
+     <label class="switch" title="Afficher un quadrillage tous les centimètres"><input id="gridSwitch" type="checkbox"><span>Quadrillage</span></label>
+     <label class="switch" title="Afficher une marge à 1 cm du bord de la feuille"><input id="marginSwitch" type="checkbox"><span>Marge 1 cm</span></label>
+     <label class="switch" title="Accrocher les points à un quadrillage de 5 mm"><input id="snapSwitch" type="checkbox"><span>Précision 5 mm</span></label>
+   </div>
+  </div>
+  <div class="paper-enclosure" id="paperEnclosure">
+   <div class="paper" id="paper">
+    <svg id="sheet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 297 210" role="img" aria-label="Feuille blanche interactive A4 paysage, outils géométriques utilisables">
+     <defs><pattern id="centimeterGrid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M10 0H0V10" fill="none" stroke="#d5e5f7" stroke-width=".23"/></pattern></defs>
+     <rect width="297" height="210" fill="#fff" id="paperBg"/>
+     <rect width="297" height="210" fill="url(#centimeterGrid)" id="gridVisual" visibility="hidden"/>
+     <rect x="10" y="10" width="277" height="190" fill="none" stroke="#b3c9e3" stroke-width=".5" stroke-dasharray="2.7 2.3" id="marginVisual" visibility="hidden"/>
+     <g id="shapesLayer"></g>
+     <g id="referenceLayer" class="canvas-tool-guide"></g>
+     <g id="previewLayer" class="canvas-tool-guide"></g>
+     <g id="cursorLayer" class="canvas-tool-guide"></g>
     </svg>
-
-    <!-- ==============================================================
-         Étape 6 : vue « établi ». Le tube droit sur l'établi, une règle
-         graduée dessous, le repère du premier tube à 0. 1 mm = 4 px,
-         x = 420 + 4 × mm ; axe du tube à y = 260, hauteur H = 148 px.
-         ============================================================== -->
-    <svg id="etabli" viewBox="0 0 1040 446" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Établi : tube droit, règle graduée et repère du premier tube" style="display:none;opacity:0">
-      <g id="etSilhouette"></g>
-      <g id="etTube"></g>
-      <g id="etRuler"></g>
-      <g id="etMarks"></g>
-      <g id="etCotes"></g>
-      <rect id="etHit" x="140" y="200" width="760" height="150" fill="transparent" style="cursor:crosshair"/>
-    </svg>
-  </section>
-
-  <section class="panel" id="panel" aria-live="polite"></section>
-</div>
-
+   </div>
+  </div>
+  <div class="status"><div class="statusmessage"><span class="statusmark"></span><span id="statusText">Stylo : dessine librement sur la feuille.</span></div><div class="coordinates" id="coordinates">x : — · y : —</div></div>
+ </section>
+ <aside class="inspector" aria-label="Mission de construction et réglages des outils">
+   <section class="mission-panel" id="missionPanel" aria-label="Consigne progressive">
+    <div class="mission-top"><span class="mission-kicker">MISSION · CONSTRUIRE UN SIPHON</span><span class="mission-count" id="missionCount">1 / 20</span></div>
+    <div class="mission-track"><div class="mission-fill" id="missionFill"></div></div>
+    <div class="mission-phase" id="missionPhase"></div>
+    <h2 class="mission-title" id="missionTitle"></h2>
+    <p class="mission-instruction" id="missionInstruction"></p>
+    <div class="mission-tool-row" id="missionToolRow"></div>
+    <div id="missionAnswer"></div>
+    <button type="button" class="mission-hint-toggle" id="missionHintBtn">+ Afficher un indice</button>
+    <div class="mission-hint hidden" id="missionHint"></div>
+    <button type="button" class="mission-main-btn" id="missionValidate">Vérifier mon tracé</button>
+    <div id="missionFeedback" aria-live="polite"></div>
+    <div class="mission-nav"><button id="missionPrevious" type="button">← Précédente</button><button id="missionRestart" type="button" title="Recommencer cette mission">Recommencer la mission ↺</button></div>
+    <p class="mission-mode-note">La vérification porte sur ton dessin. Aucun trait n'est ajouté automatiquement.</p>
+   </section>
+   <details class="tool-settings-box" id="toolSettingsBox"><summary>Réglages de l’outil sélectionné</summary><div class="tool-settings-inner">
+   <div class="inspector-kicker">OUTIL SÉLECTIONNÉ</div>
+   <div class="inspector-head"><div class="inspector-icon" id="inspectorIcon"></div><h2 id="inspectorTitle">Stylo</h2></div>
+   <p class="tool-desc" id="inspectorDesc"></p>
+   <div class="divider"></div>
+   <div class="inspector-options" id="inspectorOptions"></div>
+   <div class="inspector-bottom"><div class="info-box"><strong>Précision et liberté</strong>Les mesures sont exprimées en centimètres sur une feuille A4. Les traits restent modifiables et peuvent être enregistrés.<p style="margin:8px 0 0">Raccourcis : <span class="kbd">Ctrl/⌘ + Z</span> annuler · <span class="kbd">Échap</span> interrompre</p></div><button type="button" class="smallblue" id="clearBtn">Effacer toute la feuille</button></div>
+   </div></details>
+  </aside>
+</main>
+<div id="toast" class="toast" role="status"></div>
 <script>
-/* =====================================================================
-   0. Géométrie (unités « monde », 1 mm = 4 px)
-   ===================================================================== */
-const S = 4, WALL = 400;
-const CX = [400, 640], CY = 316, R = 44;   // tubes existants : axe à 21 mm, rayon 11 mm
-const TOP = CY - R;                       // 272 : bord extérieur (32 mm)
-const LEVEL37 = TOP - 5 * S;              // 252 : niveau à atteindre (37 mm)
-const TUBE_W = 14 * S, AX = WALL - TUBE_W / 2;   // tube à cintrer Ø 14, axe à 372
-const H_PX = 37 * S;                      // 148
-const FLAT0 = CX[0] - 15 * S, FLAT1 = CX[1] + 15 * S;
-const X0 = 40, X1 = 1080;
-const ZOOM = [140, 192, 536.7, 230], FULL = [45, 110, 1035, 443.6];
-const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
-let FAST = false;   // mode rapide : rejeu instantané lors d'une reprise de sauvegarde
-
-const svg = document.getElementById('scene');
-const $ = id => document.getElementById(id);
-
-/* Tracé du tube cintré : 45°, franchit les deux tubes avec 5 mm de jeu */
-function bentPath(dy = 0){
-  const pts = [[X0, AX], [FLAT0 - H_PX, AX], [FLAT0, AX - H_PX], [FLAT1, AX - H_PX], [FLAT1 + H_PX, AX], [X1, AX]]
-    .map(p => [p[0], p[1] + dy]);
-  let d = `M${pts[0]}`;
-  for (let i = 1; i < pts.length - 1; i++){
-    const [px, py] = pts[i-1], [cx, cy] = pts[i], [nx, ny] = pts[i+1];
-    const l1 = Math.hypot(cx-px, cy-py), l2 = Math.hypot(nx-cx, ny-cy), t = Math.min(40, l1/2, l2/2);
-    d += ` L${(cx-(cx-px)/l1*t).toFixed(1)},${(cy-(cy-py)/l1*t).toFixed(1)} Q${cx},${cy} ${(cx+(nx-cx)/l2*t).toFixed(1)},${(cy+(ny-cy)/l2*t).toFixed(1)}`;
-  }
-  return d + ` L${pts[pts.length-1]}`;
-}
-
-/* =====================================================================
-   1. Petits outils de dessin
-   ===================================================================== */
-// Cote verticale. pos : 'r' (texte à droite), 'l', 'top', 'below'
-function vcote(x, y1, y2, label, cls = '', ext = null, pos = 'r', fs = 9){
-  const top = Math.min(y1, y2), bot = Math.max(y1, y2);
-  let s = `<g class="cote ${cls}" font-size="${fs}">`;
-  if (ext !== null){
-    s += `<line class="ext" x1="${ext}" y1="${top}" x2="${x + (x > ext ? 4 : -4)}" y2="${top}"/>`;
-    s += `<line class="ext" x1="${ext}" y1="${bot}" x2="${x + (x > ext ? 4 : -4)}" y2="${bot}"/>`;
-  }
-  s += `<line x1="${x}" y1="${top}" x2="${x}" y2="${bot}" marker-start="url(#arr)" marker-end="url(#arr)"/>`;
-  const my = (top + bot) / 2 + fs * .38;
-  if (pos === 'l')       s += `<text x="${x - 6}" y="${my}" text-anchor="end">${label}</text>`;
-  else if (pos === 'top')   s += `<text x="${x}" y="${top - 6}" text-anchor="middle">${label}</text>`;
-  else if (pos === 'below') s += `<text x="${x}" y="${bot + fs + 6}" text-anchor="middle">${label}</text>`;
-  else                      s += `<text x="${x + 6}" y="${my}">${label}</text>`;
-  return s + `</g>`;
-}
-// Ligne de niveau horizontale, tracée progressivement de gauche à droite
-function addLevel(id, y, x1, x2, cls, then){
-  const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-  l.setAttribute('id', id); l.setAttribute('class', 'level ' + cls);
-  l.setAttribute('x1', x1); l.setAttribute('x2', x2); l.setAttribute('y1', y); l.setAttribute('y2', y);
-  const len = x2 - x1;
-  l.setAttribute('stroke-dasharray', cls.includes('grey') || cls.includes('q') ? '5 4' : `${len}`);
-  $('levels').appendChild(l);
-  if (cls.includes('ok')){ // apparition animée
-    l.setAttribute('stroke-dashoffset', len);
-    animate(len, 0, 1100, v => l.setAttribute('stroke-dashoffset', v), then);
-  } else then && then();
-  return l;
-}
-function append(groupId, html){
-  const g = $(groupId); g.insertAdjacentHTML('beforeend', html);
-  const el = g.lastElementChild; el.classList.add('fade');
-  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('in')));
-  return el;
-}
-function animate(from, to, dur, onFrame, onDone){
-  if (RM || FAST){ onFrame(to); onDone && onDone(); return; }
-  const t0 = performance.now(), ease = t => 1 - Math.pow(1 - t, 3);
-  (function frame(now){
-    const p = Math.min(1, (now - t0) / dur);
-    onFrame(from + (to - from) * ease(p));
-    p < 1 ? requestAnimationFrame(frame) : onDone && onDone();
-  })(t0);
-}
-function setViewBox(v){ svg.setAttribute('viewBox', v.map(n => n.toFixed(1)).join(' ')); }
-
-/* =====================================================================
-   2. État
-   ===================================================================== */
-let state;
-function reset(){
-  state = { step: 1, solved: false, attempts: 0, hints: 0, finished: false, answers: {} };
-  $('levels').innerHTML = ''; $('cotes').innerHTML = ''; $('hints').innerHTML = '';
-  ['tubeFlat', 'ghost', 'obs2'].forEach(id => $(id).classList.remove('in'));
-  $('tubeBent').style.display = 'none';
-  $('tubeFocus').style.display = 'none'; $('tubeFocus2').style.display = 'none'; $('tubeFocus2').classList.remove('in'); $('stepDepart').innerHTML = ''; svg.classList.remove('focus-depart');
-  setViewBox(ZOOM);
-  $('wallLbl').setAttribute('font-size', 9);
-  // vue établi (étape 6)
-  $('etabli').style.display = 'none'; $('etabli').style.opacity = 0;
-  svg.style.display = ''; svg.style.opacity = 1;
-  ['etSilhouette', 'etTube', 'etRuler', 'etMarks', 'etCotes'].forEach(id => $(id).innerHTML = '');
-  state.mark = null;
-  drawStep(); renderPanel();
-}
-
-/* =====================================================================
-   3. Contenu des étapes
-   ===================================================================== */
-const STEPS = {
-  1: {
-    title: 'Jusqu\u2019où monte le tube existant ?',
-    info: 'Le collier place l\u2019axe du tube à <b>21 mm</b> du mur. Le tube a un diamètre de <b>22 mm</b>.',
-    question: 'À quelle distance du mur se trouve le bord extérieur du tube ?',
-    answer: 32,
-    ok: 'Oui. Le bord extérieur du tube se trouve à 32 mm du mur.',
-    wrong(v){
-      if (v === 21) return '21 mm correspond à l\u2019axe du tube, pas à son bord. Quelle longueur faut-il encore ajouter pour aller de l\u2019axe jusqu\u2019au bord ?';
-      if (v === 43) return 'Tu as ajouté le diamètre entier. De l\u2019axe au bord, il n\u2019y a que la moitié du diamètre.';
-      if (v === 22 || v === 11) return 'Cette longueur concerne le tube seul. La question porte sur la distance depuis le mur : pars des 21 mm.';
-      if (v < 21) return 'Le bord extérieur est plus loin du mur que l\u2019axe, qui est déjà à 21 mm.';
-      return 'Ce n\u2019est pas ça. Pars de l\u2019axe (21 mm) et ajoute la distance qui va de l\u2019axe jusqu\u2019au bord.';
-    },
-    hints: ['Regarde le dessin : de l\u2019axe au bord, il y a un rayon. Le rayon, c\u2019est la moitié du diamètre.',
-            'Le diamètre vaut 22 mm. Le rayon vaut donc 11 mm.']
-  },
-  2: {
-    title: 'Laisser le jeu de 5 mm',
-    info: 'Le tube à cintrer ne doit pas toucher le tube existant. On veut laisser un jeu de <b>5 mm</b>.',
-    question: 'À quelle distance du mur doit passer la face inférieure du tube à cintrer ?',
-    answer: 37,
-    ok: 'Oui. La face inférieure du tube à cintrer doit passer à 37 mm du mur.',
-    wrong(v){
-      if (v === 32) return '32 mm, c\u2019est le bord du tube existant : à cette distance, les deux tubes se touchent. Il faut passer 5 mm plus haut.';
-      if (v === 27) return 'Le jeu se place au-dessus du tube existant : il s\u2019ajoute, il ne se retranche pas.';
-      if (v === 5) return '5 mm, c\u2019est le jeu seul. Ajoute-le à la distance du bord du tube existant (32 mm).';
-      return 'Ce n\u2019est pas ça. Pars du bord du tube existant (32 mm) et monte de la valeur du jeu.';
-    },
-    ok2: '32 + 5 = 37 mm',
-    conclusion: 'Le tube à cintrer, plaqué contre le mur, doit s\u2019écarter de cette distance. Dans le dessin professionnel, elle s\u2019appelle la cote <b>H</b> : <b>H = 37 mm</b>.',
-    hints: ['Le bord du tube existant est à 32 mm. Le jeu de 5 mm vient au-dessus.',
-            'Bord du tube existant + jeu : 32 + 5.']
-  },
-  3: {
-    title: 'Départ du cintrage',
-    info: 'Le tube monte de <b>37 mm</b> avec un angle de <b>45°</b>.',
-    question: 'Quelle distance parcourt-il horizontalement pendant cette montée ?',
-    answer: 37,
-    ok: 'Oui. À 45°, la montée et le déplacement horizontal sont identiques.',
-    ok2: '37 mm vers le haut → 37 mm horizontalement',
-    wrong(v){
-      if (v === 45) return '45°, c\u2019est l\u2019angle. On cherche une longueur, en millimètres.';
-      if (v >= 52 && v <= 53) return 'C\u2019est la longueur de la partie oblique. Ici, on cherche le déplacement horizontal : le côté du bas du triangle.';
-      if (v === 74) return 'Tu as doublé la montée. Regarde le triangle : est-il vraiment deux fois plus large que haut ?';
-      if (v === 18.5) return 'Tu as divisé la montée par deux. Regarde le triangle : le côté du bas est-il plus court que le côté vertical ?';
-      return 'Ce n\u2019est pas ça. Dans le triangle, compare le côté vertical (37 mm) et le côté horizontal, en utilisant l\u2019angle de 45°.';
-    },
-    hints: ['Tu connais l\u2019angle, le côté opposé, et tu cherches le côté adjacent.',
-            'tan(45°) = 37 / ? &nbsp;— et tan(45°) vaut 1.']
-  },
-  4: {
-    title: 'Longueur oblique',
-    info: 'Le déplacement vertical est de <b>37 mm</b> et le déplacement horizontal est de <b>37 mm</b>.',
-    question: 'Quelle est la longueur oblique A–C ?',
-    answer: 52.3, tol: 0.1,
-    ok: 'Oui. La distance oblique A–C mesure environ 52,3 mm.',
-    ok2: 'AC = √(37² + 37²) ≈ 52,3 mm',
-    wrong(v){
-      if (v === 74) return '74 mm correspond à 37 + 37. Mais dans un triangle rectangle, la longueur oblique ne s\u2019obtient pas en additionnant les deux côtés.';
-      if (v === 37) return '37 mm correspond à chacun des deux côtés perpendiculaires. La diagonale est plus longue.';
-      if (v >= 1360 && v <= 1380) return '1369 correspond à 37². Il faut utiliser les deux côtés du triangle.';
-      return 'Utilise les deux côtés de 37 mm du triangle rectangle.';
-    },
-    hints: ['Tu connais les deux côtés perpendiculaires d\u2019un triangle rectangle. Quel théorème permet de calculer le troisième côté ?',
-            'AC² = 37² + 37²']
-  },
-  5: {
-    title: 'Les deux parties obliques',
-    info: 'Les deux parties obliques sont identiques.',
-    question: 'Quelle longueur représentent-elles au total ?',
-    answer: 104.6, tol: 0.25,
-    ok: 'Oui.',
-    ok2: '2 × 52,3 ≈ 104,6 mm',
-    wrong(v){
-      if (v >= 52.2 && v <= 52.4) return '52,3 mm correspond à une seule partie oblique. Le franchissement en comporte deux identiques.';
-      return 'Ce n\u2019est pas ça. Regarde le dessin : combien y a-t-il de parties obliques, et quelle est la longueur de chacune ?';
-    },
-    hints: ['Chaque partie oblique mesure environ 52,3 mm.']
-  },
-  6: {
-    title: 'Tracer le repère sur le tube',
-    info: 'Pour être à la bonne hauteur au niveau du premier tube, la montée doit commencer <b>37 mm avant</b>.',
-    question: 'Place le repère où doit commencer la montée.',
-    mark: true,
-    ok: 'Dans notre modèle géométrique à 45°, la zone comprise entre le début de la montée et la fin de la descente s\u2019étend sur 124 mm.'
-  }
+(()=>{
+'use strict';
+const W=297,H=210,NS='http://www.w3.org/2000/svg',STORE='cmis_geometrie_siphon_mission_v1';
+const $=id=>document.getElementById(id);
+const svg=$('sheet'), shapesLayer=$('shapesLayer'), previewLayer=$('previewLayer'), referenceLayer=$('referenceLayer'), cursorLayer=$('cursorLayer');
+const nameMap={pen:'Stylo',ruler:'Règle',compass:'Compas',square:'Équerre',protractor:'Rapporteur',point:'Point',eraser:'Gomme',select:'Déplacer'};
+const descriptions={
+ pen:'Dessine directement sur la feuille, comme avec un stylo. Maintiens et déplace la souris ou ton doigt.',
+ ruler:'Trace un segment parfaitement droit : pars d’un point, puis glisse jusqu’à l’extrémité. La longueur apparaît en centimètres.',
+ compass:'Place la pointe au centre et écarte le compas en glissant pour choisir le rayon. Tu peux aussi fixer une ouverture précise.',
+ square:'Trace une perpendiculaire à un segment existant. Sélectionne une droite d’appui, puis glisse pour tracer à 90°.',
+ protractor:'Construis un angle : choisis sa mesure, puis fais glisser depuis le sommet pour déterminer la direction de départ.',
+ point:'Clique sur la feuille pour placer un point et lui donner un nom (A, B, C, O…).',
+ eraser:'Clique sur un tracé pour l’effacer. Tu peux aussi glisser pour effacer plusieurs objets.',
+ select:'Clique sur un tracé, puis déplace-le en faisant glisser la souris ou ton doigt.'
 };
-function fmt(v){ return String(v).replace('.', ',') + ' mm'; }
-
-/* =====================================================================
-   4. Dessin de chaque étape (ce qui est déjà acquis reste, en gris)
-   ===================================================================== */
-function drawStep(){
-  $('cotes').innerHTML = ''; $('hints').innerHTML = '';
-  const c = $('cotes');
-  if (state.step === 1){
-    // mur → axe : 21 ; diamètre : 22 ; le bord extérieur demandé : « ? »
-    c.innerHTML = vcote(CX[0] - R - 34, CY, WALL, '21', '', CX[0] - R - 4, 'l')
-                + vcote(CX[0] + R + 34, TOP, CY + R, 'Ø 22', '', CX[0] + R + 4)
-                + vcote(600, TOP, WALL, '?', 'q', CX[0] + R + 4, 'r', 11);
-    $('levels').innerHTML = '';
-    addLevel('lvQ', TOP, CX[0] - R, 660, 'q');
+const colors=['#193954','#20262e','#1769db','#bd6740','#18866a','#93a5b7'];
+let shapes=[], tool='pen', active=null, selectedReference=null, pickingReference=false;
+let undoStack=[],redoStack=[],nextId=1, nextPoint=0;
+let settings={grid:false,margin:false,snap:true,width:0.65,color:colors[0],compassFixed:false,compassRadius:2,rulerFixed:false,rulerLength:6,squareFixed:false,squareLength:9,eraserMode:'whole',angle:45,angleDirection:1,pointLabel:'A'};
+let missionStep=0,missionPassed=[],missionAnswers={},missionHintOpen=false;
+const segmentTypes=['segment'];
+const TAU=2*Math.PI;
+function positiveSpan(a,b){return ((b-a)%TAU+TAU)%TAU;}
+function arcEnd(s,ang){return{x:s.center.x+s.r*Math.cos(ang),y:s.center.y+s.r*Math.sin(ang)};}
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const copy=o=>JSON.parse(JSON.stringify(o));
+const finite=n=>Number.isFinite(n);
+function isEditableFocus(){return ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)}
+function snappoint(p){
+ // Aimantation légère sur les points géométriques existants.
+ let best=null,close=2.7;
+ for(const s of shapes){
+  const anchors=s.type==='segment'?[s.a,s.b]:s.type==='circle'?[s.center,{x:s.center.x+s.r,y:s.center.y},{x:s.center.x-s.r,y:s.center.y},{x:s.center.x,y:s.center.y+s.r},{x:s.center.x,y:s.center.y-s.r}]:s.type==='arc'?[s.center,arcEnd(s,s.a0),arcEnd(s,s.a1)]:s.type==='point'?[{x:s.x,y:s.y}]:s.type==='angle'?[s.origin]:[];
+  for(const a of anchors){const d=dist(p,a);if(d<close){close=d;best=a;}}
+ }
+ if(best)return{x:best.x,y:best.y};
+ if(!settings.snap)return p;
+ return {x:clamp(Math.round(p.x/5)*5,0,W),y:clamp(Math.round(p.y/5)*5,0,H)};
+}
+function getPoint(evt){let m=svg.getScreenCTM();if(!m)return{x:0,y:0};let sp=svg.createSVGPoint();sp.x=evt.clientX;sp.y=evt.clientY;let p=sp.matrixTransform(m.inverse());return {x:clamp(p.x,0,W),y:clamp(p.y,0,H)};}
+const mmToCm=v=>(v/10).toFixed(1).replace('.',',');
+function fmt(v){return mmToCm(v)+' cm'}
+function el(name,attrs={},parent=null){const e=document.createElementNS(NS,name);for(let [k,v] of Object.entries(attrs))e.setAttribute(k,String(v));if(parent)parent.appendChild(e);return e;}
+function htmlEsc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function status(msg){$('statusText').textContent=msg;}
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2600);}
+function saveLocal(){try{localStorage.setItem(STORE,JSON.stringify({version:2,shapes,settings,nextId,nextPoint,mission:{step:missionStep,passed:missionPassed,answers:missionAnswers}}));}catch(e){}}
+function pushUndo(){undoStack.push(JSON.stringify(shapes));if(undoStack.length>55)undoStack.shift();redoStack=[];}
+function historyUpdate(){ $('undoBtn').disabled=undoStack.length===0;$('redoBtn').disabled=redoStack.length===0;}
+function changed(){render();historyUpdate();if(typeof renderMission==='function')refreshMissionAfterDrawing();saveLocal();}
+function commit(shape){pushUndo();shapes.push({...shape,id:nextId++});changed();}
+function undo(){if(!undoStack.length)return;redoStack.push(JSON.stringify(shapes));shapes=JSON.parse(undoStack.pop());selectedReference=selectedReference&&shapes.some(s=>s.id===selectedReference)?selectedReference:null;changed();}
+function redo(){if(!redoStack.length)return;undoStack.push(JSON.stringify(shapes));shapes=JSON.parse(redoStack.pop());changed();}
+function drawShape(s,layer=shapesLayer){const common={fill:'none',stroke:s.color||settings.color,'stroke-width':s.width||.65,'stroke-linecap':'round','stroke-linejoin':'round','vector-effect':'none'};let g=el('g',{'data-shape':s.id??'preview'},layer);
+ if(s.type==='pen'){let d=s.points.map((p,i)=>(i?'L':'M')+p.x.toFixed(3)+' '+p.y.toFixed(3)).join(' ');el('path',{...common,d},g);}
+ else if(s.type==='segment'){el('line',{...common,x1:s.a.x,y1:s.a.y,x2:s.b.x,y2:s.b.y},g);}
+ else if(s.type==='circle'){el('circle',{...common,cx:s.center.x,cy:s.center.y,r:s.r},g);el('circle',{cx:s.center.x,cy:s.center.y,r:.8,fill:s.color||settings.color},g);}
+ else if(s.type==='arc'){const a=arcEnd(s,s.a0),b=arcEnd(s,s.a1),span=positiveSpan(s.a0,s.a1);el('path',{...common,d:`M ${a.x} ${a.y} A ${s.r} ${s.r} 0 ${span>Math.PI+1e-5?1:0} 1 ${b.x} ${b.y}`},g);}
+ else if(s.type==='angle'){el('line',{...common,x1:s.origin.x,y1:s.origin.y,x2:s.b.x,y2:s.b.y},g);el('line',{...common,x1:s.origin.x,y1:s.origin.y,x2:s.c.x,y2:s.c.y},g);
+  let aa=Math.atan2(s.b.y-s.origin.y,s.b.x-s.origin.x);let ra=Math.min(15,dist(s.origin,s.b)*.33);let direction=s.angleDirection||1;
+  let ep={x:s.origin.x+ra*Math.cos(aa+direction*s.angle*Math.PI/180),y:s.origin.y+ra*Math.sin(aa+direction*s.angle*Math.PI/180)};
+  let st={x:s.origin.x+ra*Math.cos(aa),y:s.origin.y+ra*Math.sin(aa)};
+  el('path',{d:`M ${st.x} ${st.y} A ${ra} ${ra} 0 ${s.angle>180?1:0} ${direction===1?1:0} ${ep.x} ${ep.y}`,fill:'none',stroke:s.color||settings.color,'stroke-width':.45},g);
+  let mm={x:s.origin.x+(ra+6)*Math.cos(aa+direction*s.angle*Math.PI/360),y:s.origin.y+(ra+6)*Math.sin(aa+direction*s.angle*Math.PI/360)};
+  let text=el('text',{x:mm.x,y:mm.y,'font-size':4,'text-anchor':'middle',fill:s.color||settings.color,'font-family':'Arial,sans-serif','font-weight':'700'},g);text.textContent=s.angle+'°';
+ }
+ else if(s.type==='point'){el('circle',{cx:s.x,cy:s.y,r:1.1,fill:s.color||settings.color},g);let t=el('text',{x:s.x+2,y:s.y-2.5,'font-size':4.2,'font-family':'Arial,sans-serif','font-weight':'700',fill:s.color||settings.color},g);t.textContent=s.label||'';}
+ return g;}
+function render(){shapesLayer.replaceChildren();shapes.forEach(s=>drawShape(s));renderReference();}
+function findReference(){const x=shapes.find(s=>s.id===selectedReference&&s.type==='segment');if(x)return x;const last=shapes.slice().reverse().find(s=>s.type==='segment');selectedReference=last?.id??null;return last||null;}
+function renderReference(){referenceLayer.replaceChildren();if(tool!=='square')return;let r=findReference();if(!r)return;el('line',{x1:r.a.x,y1:r.a.y,x2:r.b.x,y2:r.b.y,stroke:'#df9a34','stroke-width':1.6,'stroke-dasharray':'3 2',opacity:.85},referenceLayer);}
+function clearPreview(){previewLayer.replaceChildren();cursorLayer.replaceChildren();}
+function guideCircle(center,r){el('circle',{cx:center.x,cy:center.y,r:1.5,fill:'#df9225',stroke:'#fff','stroke-width':.6},previewLayer);el('circle',{cx:center.x,cy:center.y,r,stroke:'#1769db','stroke-width':.9,'stroke-dasharray':'2 2',fill:'none'},previewLayer);el('line',{x1:center.x,y1:center.y,x2:center.x+r,y2:center.y,stroke:'#df9225','stroke-width':.7,'stroke-dasharray':'2 1'},previewLayer);labelAt(center.x+5,center.y-7,'R = '+fmt(r));}
+function labelAt(x,y,txt){x=clamp(x,11,W-38);y=clamp(y,8,H-7);let w=txt.length*2.7+8;el('rect',{x:x-3,y:y-6,width:w,height:9,rx:2,fill:'#fff',stroke:'#c0dafa','stroke-width':.35},previewLayer);const t=el('text',{x,y,'font-size':4.1,fill:'#1769db','font-family':'Arial,sans-serif','font-weight':'700'},previewLayer);t.textContent=txt;}
+function guideRuler(a,b){let d=dist(a,b),theta=Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI;let g=el('g',{transform:`translate(${a.x} ${a.y}) rotate(${theta})`,opacity:.85},previewLayer);
+ el('rect',{x:0,y:-6,width:d,height:10,rx:1,fill:'#f7e8c7',stroke:'#be9a55','stroke-width':.3},g);
+ for(let i=0;i<=Math.floor(d/5);i++){const mm=i*5;el('line',{x1:mm,y1:-6,x2:mm,y2:i%2===0?-1.6:-3.3,stroke:'#956e2a','stroke-width':.34},g);if(i%2===0&&i>0&&i<d/5){const t=el('text',{x:mm,y:2.5,'font-size':2.7,'text-anchor':'middle',fill:'#956e2a','font-family':'Arial,sans-serif'},g);t.textContent=i/2;}}
+ el('line',{x1:0,y1:0,x2:d,y2:0,stroke:settings.color,'stroke-width':settings.width,'stroke-linecap':'round'},g);
+ labelAt((a.x+b.x)/2+3,(a.y+b.y)/2-10,fmt(d));
+}
+function guideSquare(a,b,ref){if(!ref)return;let d=dist(a,b);let ux=(ref.b.x-ref.a.x)/dist(ref.a,ref.b),uy=(ref.b.y-ref.a.y)/dist(ref.a,ref.b);let vx=-uy,vy=ux;let sign=((b.x-a.x)*vx+(b.y-a.y)*vy)>=0?1:-1;vx*=sign;vy*=sign;
+ const size=clamp(d*.38,12,24);let coords=[[a.x,a.y],[a.x+ux*size,a.y+uy*size],[a.x+vx*size,a.y+vy*size]];el('polygon',{points:coords.map(p=>p.join(',')).join(' '),fill:'#dfeefa',opacity:.65,stroke:'#e2a249','stroke-width':.5},previewLayer);
+ el('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,stroke:settings.color,'stroke-width':settings.width},previewLayer);
+ let ro=4;el('polyline',{points:[[a.x+ux*ro,a.y+uy*ro],[a.x+ux*ro+vx*ro,a.y+uy*ro+vy*ro],[a.x+vx*ro,a.y+vy*ro]].map(p=>p.join(',')).join(' '),fill:'none',stroke:'#e79b29','stroke-width':.7},previewLayer);
+ labelAt(b.x+3,b.y-4,'90° · '+fmt(d));}
+function drawGuide(activeMove){previewLayer.replaceChildren();if(!activeMove)return;
+ const a=activeMove.start,b=activeMove.end;
+ if(activeMove.tool==='pen')drawShape({type:'pen',points:activeMove.points,color:settings.color,width:settings.width},previewLayer);
+ if(activeMove.tool==='ruler')guideRuler(a,b);
+ if(activeMove.tool==='compass'){guideCircle(a,activeMove.r||Math.max(2,dist(a,b)));}
+ if(activeMove.tool==='square')guideSquare(a,b,findReference());
+ if(activeMove.tool==='protractor')drawShape({type:'angle',origin:a,b:activeMove.b,c:activeMove.c,angle:settings.angle,angleDirection:settings.angleDirection,color:settings.color,width:settings.width},previewLayer);
+ if(activeMove.tool==='select'&&activeMove.ghost)drawShape(activeMove.ghost,previewLayer);
+}
+function distanceToSegment(p,a,b){const dx=b.x-a.x,dy=b.y-a.y;let t=dx*dx+dy*dy===0?0:clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy),0,1);return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy);}
+function hitDistance(p,s){if(s.type==='circle')return Math.abs(dist(p,s.center)-s.r);
+ if(s.type==='arc'){let theta=((Math.atan2(p.y-s.center.y,p.x-s.center.x)%TAU)+TAU)%TAU,from=((s.a0%TAU)+TAU)%TAU,span=positiveSpan(s.a0,s.a1),rel=positiveSpan(from,theta);if(rel<=span+.015)return Math.abs(dist(p,s.center)-s.r);return Math.min(dist(p,arcEnd(s,s.a0)),dist(p,arcEnd(s,s.a1)));}
+ if(s.type==='segment')return distanceToSegment(p,s.a,s.b);
+ if(s.type==='pen'){let m=Infinity;for(let i=1;i<s.points.length;i++)m=Math.min(m,distanceToSegment(p,s.points[i-1],s.points[i]));return s.points.length===1?dist(p,s.points[0]):m;}
+ if(s.type==='point')return dist(p,{x:s.x,y:s.y});
+ if(s.type==='angle')return Math.min(distanceToSegment(p,s.origin,s.b),distanceToSegment(p,s.origin,s.c));return Infinity;}
+function hit(p,predicate=()=>true,tol=3.5){let best=null,d=tol;for(let i=shapes.length-1;i>=0;i--){let s=shapes[i];if(!predicate(s))continue;let z=hitDistance(p,s);if(z<=d){d=z;best=s;}}return best;}
+function updateSquareStatus(){let r=findReference();if(!r)status('Équerre : trace d’abord une droite avec la règle.');else status(pickingReference?'Équerre : clique sur la droite qui servira d’appui.':'Équerre : glisse pour tracer une perpendiculaire à la droite surlignée.');}
+function selectTool(next){if(active)return;tool=next;pickingReference=next==='square'&&!findReference();$('sheet').setAttribute('class','tool-'+next);document.querySelectorAll('[data-tool]').forEach(b=>{let a=b.dataset.tool===tool;b.classList.toggle('active',a);b.setAttribute('aria-pressed',String(a));});renderReference();renderInspector();
+ let help={pen:'Stylo : dessine librement sur la feuille.',ruler:'Règle : glisse pour tracer un segment droit.',compass:'Compas : place le centre puis glisse pour ouvrir le rayon.',square:'',protractor:'Rapporteur : fais glisser pour construire un angle.',point:'Point : clique pour marquer un point.',eraser:'Gomme : touche un tracé pour le supprimer.',select:'Déplacer : fais glisser un tracé pour le repositionner.'};
+ if(next==='square')updateSquareStatus();else status(help[next]);}
+function renderInspector(){const icon=document.querySelector(`[data-tool="${tool}"] svg`);$('inspectorIcon').innerHTML=icon?icon.outerHTML:'';$('inspectorTitle').textContent=nameMap[tool];$('inspectorDesc').textContent=descriptions[tool];let opt='';
+ if(['pen','ruler','compass','square','protractor','point'].includes(tool)){
+ opt+='<div class="optiontitle">Couleur du tracé</div><div class="colors">'+colors.map(c=>`<button class="color ${c===settings.color?'active':''}" style="--swatch:${c}" data-color="${c}" aria-label="Choisir la couleur ${c}" title="${c}"></button>`).join('')+'</div>';
+ if(tool!=='point')opt+='<div class="optiontitle">Épaisseur</div><div class="segmented">'+[[.35,'Fin'],[.65,'Normal'],[1.1,'Épais']].map(([v,t])=>`<button class="seg ${settings.width==v?'active':''}" data-width="${v}">${t}</button>`).join('')+'</div>';
+ }
+ if(tool==='ruler'){
+ opt+='<div class="optiontitle">Longueur précise</div><label class="inlinecheck"><input id="fixedRuler" type="checkbox" '+(settings.rulerFixed?'checked':'')+'> Fixer la longueur du segment</label>';
+ opt+='<div class="numberrow" style="margin-top:10px"><input class="numinput" id="rulerLength" type="number" min="0.2" max="26" step="0.1" value="'+settings.rulerLength+'"><span class="unit">cm</span></div>';
+ }
+ if(tool==='compass'){
+ opt+='<div class="optiontitle">Ouverture du compas</div><label class="inlinecheck"><input id="fixedCompass" type="checkbox" '+(settings.compassFixed?'checked':'')+'> Utiliser un rayon précis</label>';
+ opt+='<div class="numberrow" style="margin-top:12px"><input class="numinput" id="compassRadius" type="number" step="0.1" min="0.2" max="14" value="'+settings.compassRadius+'"><span class="unit">cm de rayon</span></div><div class="helper">'+(settings.compassFixed?'Clique sur la feuille pour créer directement le cercle.':'Ou laisse le rayon libre et déplace le compas en glissant.')+'</div>';
+ }
+ if(tool==='square'){
+ let r=findReference();opt+='<div class="optiontitle">Droite d’appui</div><div class="helper">'+(r?'Une droite est sélectionnée en pointillés orange.':'Aucune droite disponible : trace d’abord un segment à la règle.')+'</div><button class="smallblue" id="changeReference" type="button">'+(r?'Choisir une autre droite':'Choisir une droite')+'</button>';
+ opt+='<div class="optiontitle">Longueur de la perpendiculaire</div><label class="inlinecheck"><input id="fixedSquare" type="checkbox" '+(settings.squareFixed?'checked':'')+'> Longueur précise</label><div class="numberrow" style="margin-top:10px"><input class="numinput" id="squareLength" type="number" min="0.2" max="20" step="0.1" value="'+settings.squareLength+'"><span class="unit">cm</span></div>';
+ }
+ if(tool==='protractor'){
+ opt+='<div class="optiontitle">Mesure de l’angle</div><div class="numberrow"><input class="numinput" type="number" min="1" max="179" step="1" id="angleInput" value="'+settings.angle+'"><span class="unit">degrés (°)</span></div>';
+ opt+='<div class="presetrow">'+[30,45,60,90,120].map(a=>`<button class="preset ${a===settings.angle?'active':''}" data-angle="${a}">${a}°</button>`).join('')+'</div>';
+ opt+='<div class="optiontitle">Sens de l’angle</div><div class="segmented"><button class="seg '+(settings.angleDirection===1?'active':'')+'" data-direction="1">↻ Horaire</button><button class="seg '+(settings.angleDirection===-1?'active':'')+'" data-direction="-1">↺ Anti-horaire</button></div>';
+ }
+ if(tool==='point'){
+ opt+='<div class="optiontitle">Nom du prochain point</div><div class="numberrow"><input class="numinput" id="pointLabel" type="text" maxlength="3" value="'+htmlEsc(settings.pointLabel)+'" aria-label="Nom du point"></div>';
+ }
+ if(tool==='eraser')opt='<div class="optiontitle">Action de la gomme</div><div class="segmented">'+[['whole','Tout effacer'],['bottom','Garder le bas'],['northwest','Garder ¼ haut gauche']].map(([val,label])=>'<button type="button" class="seg '+(settings.eraserMode===val?'active':'')+'" data-erase="'+val+'">'+label+'</button>').join('')+'</div><div class="helper">Pour la mission, choisis la portion du cercle à conserver puis clique sur son contour à effacer.</div>';
+ if(tool==='select')opt='<div class="info-box" style="margin-top:16px"><strong>Déplacer un objet</strong>Les segments, cercles, points et tracés libres peuvent être repositionnés sans les redessiner.</div>';
+ $('inspectorOptions').innerHTML=opt;
+ document.querySelectorAll('[data-color]').forEach(b=>b.addEventListener('click',()=>{settings.color=b.dataset.color;renderInspector();saveLocal();}));
+ document.querySelectorAll('[data-width]').forEach(b=>b.addEventListener('click',()=>{settings.width=Number(b.dataset.width);renderInspector();saveLocal();}));
+ $('fixedRuler')?.addEventListener('change',e=>{settings.rulerFixed=e.target.checked;renderInspector();saveLocal();});
+ $('rulerLength')?.addEventListener('change',e=>{settings.rulerLength=clamp(Number(e.target.value)||6,.2,26);renderInspector();saveLocal();});
+ $('fixedSquare')?.addEventListener('change',e=>{settings.squareFixed=e.target.checked;renderInspector();saveLocal();});
+ $('squareLength')?.addEventListener('change',e=>{settings.squareLength=clamp(Number(e.target.value)||9,.2,20);renderInspector();saveLocal();});
+ document.querySelectorAll('[data-erase]').forEach(b=>b.addEventListener('click',()=>{settings.eraserMode=b.dataset.erase;renderInspector();saveLocal();}));
+ $('fixedCompass')?.addEventListener('change',e=>{settings.compassFixed=e.target.checked;renderInspector();saveLocal();});
+ $('compassRadius')?.addEventListener('change',e=>{settings.compassRadius=clamp(Number(e.target.value)||2,.2,14);renderInspector();saveLocal();});
+ $('changeReference')?.addEventListener('click',()=>{pickingReference=true;status('Équerre : clique sur le segment qui servira d’appui.');toast('Choisis une droite déjà dessinée.');});
+ $('angleInput')?.addEventListener('change',e=>{settings.angle=clamp(Math.round(Number(e.target.value)||45),1,179);renderInspector();saveLocal();});
+ document.querySelectorAll('[data-angle]').forEach(b=>b.addEventListener('click',()=>{settings.angle=Number(b.dataset.angle);renderInspector();saveLocal();}));
+ document.querySelectorAll('[data-direction]').forEach(b=>b.addEventListener('click',()=>{settings.angleDirection=Number(b.dataset.direction);renderInspector();saveLocal();}));
+ $('pointLabel')?.addEventListener('input',e=>{settings.pointLabel=e.target.value.replace(/[^0-9A-Za-zÀ-ÿ]/g,'').toUpperCase().slice(0,3)||'A';saveLocal();});
+}
+function translated(s,dx,dy){let out=copy(s);let move=p=>{p.x=clamp(p.x+dx,0,W);p.y=clamp(p.y+dy,0,H);};if(s.type==='pen')out.points.forEach(move);else if(s.type==='circle'||s.type==='arc')move(out.center);else if(s.type==='segment'){move(out.a);move(out.b)}else if(s.type==='angle'){move(out.origin);move(out.b);move(out.c)}else if(s.type==='point'){out.x=clamp(out.x+dx,0,W);out.y=clamp(out.y+dy,0,H)}return out;}
+function anglePreview(a,b){let theta=Math.atan2(b.y-a.y,b.x-a.x),len=Math.max(8,dist(a,b)),end={x:a.x+len*Math.cos(theta+settings.angleDirection*settings.angle*Math.PI/180),y:a.y+len*Math.sin(theta+settings.angleDirection*settings.angle*Math.PI/180)};return{type:'angle',origin:a,b,c:end,angle:settings.angle,angleDirection:settings.angleDirection,color:settings.color,width:settings.width};}
+function endSquare(a,raw,ref){let u=(ref.b.x-ref.a.x)/dist(ref.a,ref.b),v=(ref.b.y-ref.a.y)/dist(ref.a,ref.b);let px=-v,py=u;let signed=(raw.x-a.x)*px+(raw.y-a.y)*py;if(settings.snap)signed=Math.round(signed/5)*5;return{x:clamp(a.x+signed*px,0,W),y:clamp(a.y+signed*py,0,H)};}
+function pointerDown(evt){if(evt.button!==0&&evt.pointerType==='mouse')return;evt.preventDefault();try{svg.setPointerCapture(evt.pointerId)}catch{}
+ let p=getPoint(evt),snap=snappoint(p);
+ if(tool==='point'){const used=settings.pointLabel.toUpperCase();commit({type:'point',x:snap.x,y:snap.y,label:used,color:settings.color});if(missionStep===4&&used==='T1')settings.pointLabel='T2';else{const letter=used.charCodeAt(0);settings.pointLabel=(used.length===1&&letter>=65&&letter<90)?String.fromCharCode(letter+1):'A';}renderInspector();status('Point '+used+' placé.');return;}
+ if(tool==='eraser'){
+  const special=settings.eraserMode!=='whole';
+  let h=hit(p,s=>special?s.type==='circle':true);
+  if(!h){status('Gomme : clique sur le contour du tracé à modifier.');return;}
+  if(special){
+   const isBottom=settings.eraserMode==='bottom';
+   const keep=isBottom?{center:{x:130,y:130},r:30,a0:0,a1:Math.PI}:{center:{x:180,y:70},r:20,a0:Math.PI,a1:1.5*Math.PI};
+   if(dist(h.center,keep.center)>2.6||Math.abs(h.r-keep.r)>2){toast('Choisis le cercle correspondant à la consigne.');return;}
+   if(isBottom&&p.y>=h.center.y-4){toast('Clique sur la moitié supérieure à effacer.');return;}
+   if(!isBottom&&p.x<=h.center.x-4&&p.y<=h.center.y-4){toast('Clique sur une partie à effacer, pas sur le quart à conserver.');return;}
+   pushUndo();let index=shapes.findIndex(s=>s.id===h.id);
+   shapes[index]={...h,type:'arc',a0:keep.a0,a1:keep.a1,color:'#1769db'};
+   changed();status(isBottom?'Demi-cercle inférieur conservé.':'Quart de cercle supérieur gauche conservé.');return;
   }
-  if (state.step === 2){
-    // acquis : niveau 32 en gris. Nouveau : bande de jeu 5 mm et niveau « ? »
-    $('levels').innerHTML = '';
-    addLevel('lv32', TOP, 300, 660, 'grey');
-    c.innerHTML = vcote(600, TOP, WALL, '32', 'grey', null, 'r');
-    append('cotes', `<g><rect class="jeu-band" x="300" y="${LEVEL37}" width="360" height="${5 * S}"/></g>`);
-    append('cotes', vcote(540, LEVEL37, TOP, 'jeu 5', 'warn', null, 'l'));
-    setTimeout(() => {
-      addLevel('lvQ', LEVEL37, 300, 660, 'q');
-      append('cotes', vcote(650, LEVEL37, WALL, '?', 'q', null, 'r', 11));
-    }, 500);
-  }
-  if (state.step === 3) drawStepDepart();
-  if (state.step === 4) drawStepOblique();
-  if (state.step === 5) drawStepDeux();
-  if (state.step === 6) drawStepTrace();
+  pushUndo();shapes=shapes.filter(s=>s.id!==h.id);active={tool:'eraser',pointerId:evt.pointerId};changed();status('Tracé effacé.');return;
+ }
+ if(tool==='select'){let h=hit(p);if(!h){status('Déplacer : sélectionne un tracé existant.');return;}active={tool:'select',pointerId:evt.pointerId,start:p,end:p,objectId:h.id,original:copy(h),moved:false};status('Déplacement en cours…');return;}
+ if(tool==='square'){if(pickingReference||!findReference()){
+ let h=hit(p,s=>s.type==='segment',4.5);if(h){selectedReference=h.id;pickingReference=false;renderReference();renderInspector();updateSquareStatus();toast('Droite d’appui sélectionnée.');}else{toast('Sélectionne d’abord un segment tracé à la règle.');}return;}
+ }
+ if(tool==='compass'&&settings.compassFixed){let r=settings.compassRadius*10;commit({type:'circle',center:snap,r,color:settings.color,width:settings.width});status('Cercle tracé : rayon '+fmt(r)+'.');return;}
+ active={tool,pointerId:evt.pointerId,start:snap,end:snap,points:[p],r:0,moved:false};
+ if(tool==='protractor'){active.b={x:snap.x+10,y:snap.y};active.c={x:snap.x+10*Math.cos(settings.angle*Math.PI/180),y:snap.y+10*Math.sin(settings.angle*Math.PI/180)};}
+ if(tool==='compass')active.r=0;
+ drawGuide(active);
 }
-
-/* =====================================================================
-   4 quinquies. Étape 6 — Tracer le repère sur le tube (vue établi)
-   Le calcul devient un trait de crayon : la montée commence 37 mm
-   avant le repère du premier tube. Le modèle : 37 → 50 → 37 = 124.
-   ===================================================================== */
-const ET = { X0: 420, S: 4, AX: 260, W: 56, H: 148, MIN: -60, MAX: 110, FLAT: 50 };
-const etx = mm => ET.X0 + ET.S * mm;
-function etPolyPath(pts){
-  let d = `M${pts[0]}`;
-  for (let i = 1; i < pts.length - 1; i++){
-    const [px, py] = pts[i-1], [cx, cy] = pts[i], [nx, ny] = pts[i+1];
-    const l1 = Math.hypot(cx-px, cy-py), l2 = Math.hypot(nx-cx, ny-cy), t = Math.min(40, l1/2, l2/2);
-    d += ` L${(cx-(cx-px)/l1*t).toFixed(1)},${(cy-(cy-py)/l1*t).toFixed(1)} Q${cx},${cy} ${(cx+(nx-cx)/l2*t).toFixed(1)},${(cy+(ny-cy)/l2*t).toFixed(1)}`;
-  }
-  return d + ` L${pts[pts.length-1]}`;
+function pointerMove(evt){let p=getPoint(evt);$('coordinates').textContent='x : '+fmt(p.x)+' · y : '+fmt(p.y);
+ if(!active||evt.pointerId!==active.pointerId){if(tool==='eraser'){cursorLayer.replaceChildren();el('circle',{cx:p.x,cy:p.y,r:3.5,stroke:'#bd6740',fill:'none','stroke-width':.5,'stroke-dasharray':'1.3 1.3'},cursorLayer);}return;}
+ if(active.tool==='eraser'){let h=hit(p);if(h){shapes=shapes.filter(s=>s.id!==h.id);changed();}return;}
+ if(active.tool==='select'){let dx=p.x-active.start.x,dy=p.y-active.start.y;active.moved=Math.hypot(dx,dy)>0.4;active.ghost=translated(active.original,dx,dy);drawGuide(active);return;}
+ if(active.tool==='pen'){if(dist(p,active.points[active.points.length-1])>.15)active.points.push(p);active.moved=true;active.end=p;}
+ else if(active.tool==='ruler'){let b=snappoint(p);if(evt.shiftKey){let angle=Math.atan2(b.y-active.start.y,b.x-active.start.x);let snapped=Math.round(angle/(Math.PI/4))*(Math.PI/4),d=dist(active.start,b);b={x:active.start.x+d*Math.cos(snapped),y:active.start.y+d*Math.sin(snapped)};}if(settings.rulerFixed){let d=Math.max(.001,dist(active.start,b));let length=settings.rulerLength*10;b={x:clamp(active.start.x+(b.x-active.start.x)/d*length,0,W),y:clamp(active.start.y+(b.y-active.start.y)/d*length,0,H)};}active.end=b;active.moved=dist(active.start,active.end)>1;}
+ else if(active.tool==='compass'){active.end=p;active.r=dist(active.start,p);active.moved=active.r>2;}
+ else if(active.tool==='square'){let r=findReference();if(!r)return;let b=endSquare(active.start,p,r);if(settings.squareFixed){let d=dist(active.start,b)||1,l=settings.squareLength*10;b={x:clamp(active.start.x+(b.x-active.start.x)/d*l,0,W),y:clamp(active.start.y+(b.y-active.start.y)/d*l,0,H)};}active.end=b;active.moved=dist(active.start,active.end)>1;}
+ else if(active.tool==='protractor'){let pp=snappoint(p);let aa=anglePreview(active.start,pp);active.b=aa.b;active.c=aa.c;active.end=pp;active.moved=dist(active.start,pp)>3;}
+ drawGuide(active);
 }
-// tracé du tube cintré à partir du repère m (mm) : montée 37, partie haute 50, descente 37
-function etBentPath(m, dy = 0){
-  const y0 = ET.AX + dy, y1 = ET.AX - ET.H + dy;
-  return etPolyPath([[100, y0], [etx(m), y0], [etx(m + 37), y1], [etx(m + 37 + ET.FLAT), y1], [etx(m + 74 + ET.FLAT), y0], [960, y0]]);
+function pointerUp(evt){if(!active||evt.pointerId!==active.pointerId)return;const cur=active;active=null;clearPreview();
+ if(cur.tool==='eraser'){changed();return;}
+ if(cur.tool==='select'){if(!cur.moved)return;const index=shapes.findIndex(s=>s.id===cur.objectId);if(index===-1)return;pushUndo();shapes[index]=cur.ghost;changed();status('Objet déplacé.');return;}
+ if(!cur.moved){return;}
+ if(cur.tool==='pen'){if(cur.points.length>1){commit({type:'pen',points:cur.points,color:settings.color,width:settings.width});status('Tracé au stylo ajouté.');}}
+ else if(cur.tool==='ruler'){commit({type:'segment',a:cur.start,b:cur.end,mode:'ruler',color:settings.color,width:settings.width});selectedReference=shapes[shapes.length-1].id;status('Segment tracé : '+fmt(dist(cur.start,cur.end))+'.');}
+ else if(cur.tool==='compass'){let r=Math.min(cur.r,300);commit({type:'circle',center:cur.start,r,color:settings.color,width:settings.width});status('Cercle tracé : rayon '+fmt(r)+'.');}
+ else if(cur.tool==='square'){commit({type:'segment',a:cur.start,b:cur.end,mode:'square',color:settings.color,width:settings.width});status('Perpendiculaire de '+fmt(dist(cur.start,cur.end))+' tracée.');}
+ else if(cur.tool==='protractor'){commit({type:'angle',origin:cur.start,b:cur.b,c:cur.c,angle:settings.angle,angleDirection:settings.angleDirection,color:settings.color,width:settings.width});status('Angle de '+settings.angle+'° construit.');}
 }
-function etLengthAtX(path, x){   // longueur d'arc à laquelle le tracé atteint l'abscisse x (première fois)
-  const L = path.getTotalLength();
-  for (let l = 0; l <= L; l += 2){ if (path.getPointAtLength(l).x >= x) return l; }
-  return L;
-}
-function fmtAvant(m){ return m === 0 ? 'sur le repère' : `${Math.abs(m)} mm ${m < 0 ? 'avant' : 'après'}`; }
-
-function drawStepTrace(){
-  // 1. la coupe s'efface, l'établi apparaît
-  svg.style.opacity = 0;
-  setTimeout(() => {
-    svg.style.display = 'none';
-    buildEtabli();
-    $('etabli').style.display = '';
-    requestAnimationFrame(() => requestAnimationFrame(() => $('etabli').style.opacity = 1));
-  }, 800);
-}
-function buildEtabli(){
-  const y = ET.AX, w = ET.W;
-  // silhouette légère de l'installation : les deux tubes à franchir, à 0 et à 50
-  $('etSilhouette').innerHTML = [0, ET.FLAT].map((mm, i) => `<g class="et-obs" id="etObs${i + 1}">
-      <circle class="ring" cx="${etx(mm)}" cy="${y - 14 * ET.S}" r="${R + 4}"/>
-      <circle class="body" cx="${etx(mm)}" cy="${y - 14 * ET.S}" r="${R}"/></g>`).join('')
-    + `<text class="et-lbl" x="${etx(0)}" y="${y - 14 * ET.S - R - 12}" text-anchor="middle">installation à franchir</text>`;
-  // le tube droit sur l'établi
-  $('etTube').innerHTML = `<g id="etStraight">
-      <rect x="100" y="${y - w / 2 - 1}" width="860" height="${w + 2}" fill="#8c5327"/>
-      <rect x="100" y="${y - w / 2}" width="860" height="${w}" fill="#c27a3f"/>
-      <rect x="100" y="${y - w / 2 + 8}" width="860" height="11" fill="#efc494" opacity=".55"/>
-    </g>
-    <g id="etBent" style="display:none">
-      <path class="tube-edge" stroke-width="${w + 2}" pathLength="1000"/>
-      <path class="tube-base" stroke-width="${w}" pathLength="1000"/>
-      <path class="tube-shine" stroke-width="11" pathLength="1000"/>
-    </g>`;
-  // la règle graduée : 0 sur le repère du premier tube, négatif vers la gauche
-  const ry = y + w / 2 + 22;
-  let r = `<rect class="ruler" x="${etx(ET.MIN) - 20}" y="${ry}" width="${(ET.MAX - ET.MIN) * ET.S + 40}" height="46"/>`;
-  for (let mm = ET.MIN; mm <= ET.MAX; mm++){
-    const h = mm % 10 === 0 ? 16 : mm % 5 === 0 ? 11 : 6;
-    r += `<line class="tick" x1="${etx(mm)}" y1="${ry}" x2="${etx(mm)}" y2="${ry + h}"/>`;
-    if (mm % 10 === 0) r += `<text class="tick-lbl" x="${etx(mm)}" y="${ry + 32}" text-anchor="middle">${mm}</text>`;
-  }
-  r += `<text class="et-lbl" x="${etx(ET.MAX) + 22}" y="${ry + 32}">mm</text>`;
-  // le repère du premier tube
-  r += `<line class="ref-line" x1="${etx(0)}" y1="${y - w / 2 - 34}" x2="${etx(0)}" y2="${ry + 16}"/>
-        <text class="ref-lbl" x="${etx(0) + 8}" y="${ry - 7}" font-size="12">repère du premier tube</text>`;
-  $('etRuler').innerHTML = r;
-  $('etMarks').innerHTML = `<line id="etGuide" class="guide" x1="0" y1="${y - w / 2 - 12}" x2="0" y2="${y + w / 2 + 12}" style="display:none"/>`;
-  // interaction : le clic sur le tube pose le trait, aimanté au millimètre
-  const hit = $('etHit');
-  const toMm = e => {
-    const pt = $('etabli').createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
-    const p = pt.matrixTransform($('etabli').getScreenCTM().inverse());
-    return Math.max(ET.MIN, Math.min(ET.MAX, Math.round((p.x - ET.X0) / ET.S)));
-  };
-  hit.onpointermove = e => { if (state.solved || state.busy) return; const g = $('etGuide'); g.style.display = ''; g.setAttribute('x1', etx(toMm(e))); g.setAttribute('x2', etx(toMm(e))); };
-  hit.onpointerleave = () => { $('etGuide').style.display = 'none'; };
-  hit.onclick = e => { if (state.solved || state.busy) return; placeMark(toMm(e)); };
-}
-function placeMark(m){
-  state.mark = m;
-  const y = ET.AX, w = ET.W, x = etx(m);
-  let g = $('etPencil');
-  if (!g){ $('etMarks').insertAdjacentHTML('beforeend', `<g id="etPencil"><line class="pencil"/><text class="pencil-lbl" text-anchor="middle"/></g>`); g = $('etPencil'); }
-  const l = g.querySelector('line'), t = g.querySelector('text');
-  l.setAttribute('x1', x); l.setAttribute('x2', x); l.setAttribute('y1', y - w / 2 - 6); l.setAttribute('y2', y + w / 2 + 6);
-  t.setAttribute('x', x); t.setAttribute('y', y + w / 2 + 88); t.textContent = fmtAvant(m);
-  const info = $('markInfo'); if (info) info.textContent = 'Trait placé ' + fmtAvant(m) + ' le repère.';
-  const b = $('btnMark'); if (b) b.disabled = false;
-}
-/* Le tube se cintre à partir du repère m ; upTo : abscisse (px) où s'arrête le tracé (undefined = jusqu'au bout) */
-function etBend(m, dur, upTo, then){
-  const d = etBentPath(m);
-  const paths = $('etBent').querySelectorAll('path');
-  paths.forEach((p, i) => { p.setAttribute('d', i === 2 ? etBentPath(m, -16) : d); p.setAttribute('stroke-dasharray', '1000'); });
-  $('etStraight').style.display = 'none'; $('etBent').style.display = '';
-  $('etSilhouette').querySelector('text').style.opacity = 0;
-  const L = paths[0].getTotalLength();
-  const from = state.etOffset ?? 1000 * (1 - etLengthAtX(paths[0], etx(m)) / L);
-  const to = upTo === undefined ? 0 : 1000 * (1 - etLengthAtX(paths[0], upTo) / L);
-  animate(from, to, dur, v => paths.forEach(p => p.setAttribute('stroke-dashoffset', v)), () => { state.etOffset = to; then && then(); });
-}
-function etUnbend(){ $('etBent').style.display = 'none'; $('etStraight').style.display = ''; $('etSilhouette').querySelector('text').style.opacity = 1; state.etOffset = null; }
-
-/* Vérification du repère */
-function verifyMark(){
-  const m = state.mark; if (m === null || state.busy) return;
-  state.answers[6] = m;
-  $('etGuide').style.display = 'none';
-  $('fb').querySelectorAll('.feedback.err').forEach(e => e.remove());
-  if (Math.abs(m + 37) <= 1){ state.mark = -37; success(); return; }
-  state.attempts++; state.busy = true; $('btnMark').disabled = true;
-  const late = m > -37;
-  etBend(m, 2200, undefined, () => {
-    // au niveau du premier tube (à 0), la hauteur atteinte est (0 − m) mm ; il en faut 37
-    if (late) $('etObs1').classList.add('hit');
-    else if (m + 37 + ET.FLAT < ET.FLAT - 5) $('etObs2').classList.add('hit');   // redescend trop tôt : touche le second tube
-    $('etCotes').innerHTML = late
-      ? `<text class="et-note" x="${etx(0) + 12}" y="${ET.AX - ET.H - ET.W / 2 - 16}">hauteur atteinte trop tard</text>`
-      : `<text class="et-note" x="${etx(m + 37)}" y="${ET.AX - ET.H - ET.W / 2 - 16}" text-anchor="middle">hauteur atteinte trop tôt</text>`;
-    showFeedback('err', late
-      ? 'La montée commence trop tard : au niveau du premier tube, la hauteur nécessaire n\u2019est pas encore atteinte.'
-      : 'La montée commence plus tôt que nécessaire. Rapproche ton repère du premier tube.');
-    setTimeout(() => {
-      $('etObs1').classList.remove('hit'); $('etObs2').classList.remove('hit'); $('etCotes').innerHTML = '';
-      etUnbend(); state.busy = false; $('btnMark').disabled = false;
-    }, 2800);
-  });
-}
-/* Réussite : le trait devient net, le tube se cintre jusqu'au premier tube, puis la conséquence */
-function successTrace(then){
-  const st = STEPS[6];
-  const g = $('etPencil'); g.querySelector('line').classList.add('net');
-  const t = g.querySelector('text'); t.textContent = '37 mm avant'; t.classList.add('ok');
-  placeMarkStatic(-37);
-  setTimeout(() => {
-    etBend(-37, 1800, etx(0) + 32, () => {
-      $('etCotes').innerHTML = vcote(etx(0) + R + 8, ET.AX - ET.H, ET.AX, 'H = 37', 'ok', null, 'r', 14);
-      showFeedback('ok', 'Repère correct : la montée commence 37 mm avant le tube à franchir.');
-      setTimeout(() => consequenceTrace(then), 1400);
-    });
-  }, 900);
-}
-function placeMarkStatic(m){
-  const g = $('etPencil'), l = g.querySelector('line'), t = g.querySelector('text');
-  l.setAttribute('x1', etx(m)); l.setAttribute('x2', etx(m)); t.setAttribute('x', etx(m));
-}
-/* Après validation : les deux tubes existants réapparaissent, le tracé se poursuit,
-   puis les cotes 37 → 50 → 37 et la cote globale 124 */
-function consequenceTrace(then){
-  $('etObs1').classList.add('solid'); $('etObs2').classList.add('solid');
-  setTimeout(() => {
-    etBend(-37, 2400, undefined, () => {
-      const yC = ET.AX - ET.H - ET.W / 2 - 26, yG = yC - 34, ext = ET.AX - ET.H - ET.W / 2 - 4;
-      const seg = (a, b, label, delay) => setTimeout(() => append('etCotes', hcoteE(yC, etx(a), etx(b), label, 'ok', ext)), delay);
-      seg(-37, 0, '37', 0);
-      seg(0, ET.FLAT, '50', 700);
-      seg(ET.FLAT, ET.FLAT + 37, '37', 1400);
-      setTimeout(() => {
-        append('etCotes', hcoteE(yG, etx(-37), etx(ET.FLAT + 37), '37 + 50 + 37 = 124 mm', 'ok', null));
-        setTimeout(then, 800);
-      }, 2300);
-    });
-  }, 1000);
-}
-// cote horizontale (vue établi) ; ext : ordonnée de départ des lignes d'attache
-function hcoteE(y, x1, x2, label, cls = '', ext = null, fs = 14){
-  const l = Math.min(x1, x2), r = Math.max(x1, x2);
-  let s = `<g class="cote ${cls}" font-size="${fs}">`;
-  if (ext !== null) s += `<line class="ext" x1="${l}" y1="${ext}" x2="${l}" y2="${y - 4}"/><line class="ext" x1="${r}" y1="${ext}" x2="${r}" y2="${y - 4}"/>`;
-  s += `<line x1="${l}" y1="${y}" x2="${r}" y2="${y}" marker-start="url(#arr)" marker-end="url(#arr)"/>`;
-  s += `<text x="${(l + r) / 2}" y="${y - 7}" text-anchor="middle">${label}</text></g>`;
-  return s;
-}
-
-/* =====================================================================
-   4 quater. Étape 5 — Les deux montées : la descente est l'image
-   symétrique de la montée, les deux obliques mesurent ≈ 52,3 mm.
-   C' = fin de la partie haute, A' = retour contre le mur.
-   ===================================================================== */
-const TC2 = [FLAT1, AX - H_PX], TA2 = [FLAT1 + H_PX, AX];
-function flashSeg(p, q, delay){
-  setTimeout(() => {
-    const g = $('stepDepart');
-    g.insertAdjacentHTML('beforeend', `<line class="flash" x1="${p[0]}" y1="${p[1]}" x2="${q[0]}" y2="${q[1]}"/>`);
-    const l = g.lastElementChild; setTimeout(() => l.remove(), 1000);
-  }, delay);
-}
-function flashBoth(){ flashSeg(TA, TC, 0); flashSeg(TC2, TA2, 900); }
-function drawStepDeux(){
-  // la descente apparaît, nette comme la montée
-  const d = $('tbBase').getAttribute('d');
-  $('tubeFocus2').querySelectorAll('path').forEach((p, i) => p.setAttribute('d', i === 2 ? bentPath(-16) : d));
-  $('tubeFocus2').style.display = '';
-  requestAnimationFrame(() => requestAnimationFrame(() => $('tubeFocus2').classList.add('in')));
-  // la montée s'illumine, puis la descente ; la seconde oblique se trace et reçoit ≈ 52,3
-  flashBoth();
-  setTimeout(() => {
-    append('stepDepart', `<line class="tri-hyp ok" id="hyp2" x1="${TC2[0]}" y1="${TC2[1]}" x2="${TA2[0]}" y2="${TA2[1]}"/>`);
-    setTimeout(() => append('stepDepart', `<text id="lblHyp2" class="hyp-lbl ok" x="${(TC2[0] + TA2[0]) / 2 + 31}" y="${(TC2[1] + TA2[1]) / 2 - 31}" text-anchor="middle">≈ 52,3</text>`), 600);
-  }, 1900);
-}
-/* Coup de pouce : les deux segments se mettent en évidence */
-function drawHintDeux(n){ if (n === 1) flashBoth(); }
-/* Réussite : annotation commune au-dessus des deux obliques */
-function successDeux(then){
-  const y = AX - H_PX - TUBE_W / 2 - 30, x1 = TA[0] + 45, x2 = TA2[0] - 45;
-  append('stepDepart', `<g>
-    <path class="brace" d="M${x1},${y + 10} L${x1},${y} L${x2},${y} L${x2},${y + 10}"/>
-    <text class="brace-lbl" x="${(x1 + x2) / 2}" y="${y - 10}" text-anchor="middle">deux parties obliques : ≈ 104,6 mm</text>
-  </g>`);
-  setTimeout(then, 900);
-}
-
-/* =====================================================================
-   4 ter. Étape 4 — Longueur oblique : sur le même triangle, les côtés
-   37 et 37 sont acquis, l'hypoténuse A–C est la seule inconnue.
-   ===================================================================== */
-function drawStepOblique(){
-  const g = $('stepDepart');
-  const HYP_LBL = [(TA[0] + TC[0]) / 2 - 31, (TA[1] + TC[1]) / 2 - 31];   // étiquette posée à côté de l'hypoténuse, hors du tube
-  // ce qui vient de l'étape 3 devient acquis : côtés en gris calme, repères de cintrage effacés
-  g.querySelectorAll('.tri-side').forEach(l => { l.classList.remove('ok'); l.classList.add('known'); });
-  g.querySelectorAll('.tri-lbl').forEach(t => { t.classList.remove('ok', 'q'); t.classList.add('known'); });
-  g.querySelectorAll('.mark-lbl, .tri-name').forEach(t => t.style.opacity = 0);
-  // les sommets A, B, C
-  append('stepDepart', `<g>
-    <text class="pt-lbl" x="${TA[0] - 14}" y="${TA[1] - 8}">A</text>
-    <text class="pt-lbl" x="${TB[0] + 10}" y="${TB[1] + 16}">B</text>
-    <text class="pt-lbl" x="${TC[0] + 12}" y="${TC[1] - 4}">C</text>
-  </g>`);
-  // l'hypoténuse devient l'inconnue
-  setTimeout(() => {
-    g.querySelector('.tri-hyp').classList.add('q');
-    append('stepDepart', `<text id="lblHyp" class="hyp-lbl" x="${HYP_LBL[0]}" y="${HYP_LBL[1]}" text-anchor="middle">?</text>`);
-  }, 700);
-}
-/* Coups de pouce : l'angle droit se met en évidence */
-function drawHintOblique(n){
-  if (n === 1){
-    const ra = $('stepDepart').querySelector('.tri + path');
-    if (ra) ra.setAttribute('class', 'ra lit');
-  }
-}
-/* Réussite : « ? » devient « ≈ 52,3 », l'hypoténuse se met en évidence, les côtés 37 restent */
-function successOblique(then){
-  const lbl = $('lblHyp'), hyp = $('stepDepart').querySelector('.tri-hyp');
-  hyp.classList.remove('q'); hyp.classList.add('ok');
-  lbl.style.opacity = 0;
-  setTimeout(() => { lbl.textContent = '≈ 52,3'; lbl.classList.add('ok'); lbl.style.opacity = 1; setTimeout(then, 800); }, 600);
-}
-
-/* Conclusion de l'étape 2 : la distance trouvée (mur → niveau 37) s'appelle H.
-   Le tube plaqué apparaît, s'écarte du mur jusqu'au niveau 37, et la cote H se pose
-   exactement entre le mur et ce niveau — même hauteur que la cote 37 à droite. */
-function transitionH(then){
-  $('tubeFlat').classList.add('in');
-  append('cotes', `<text class="lbl" x="172" y="${WALL + 18}" font-size="8">face inférieure contre le mur : 0 mm</text>`);
-  setTimeout(() => {
-    $('ghost').setAttribute('transform', `translate(0,${H_PX})`);
-    $('ghost').classList.add('in');
-    animate(H_PX, 0, 1400, v => $('ghost').setAttribute('transform', `translate(0,${v})`), () => {
-      append('cotes', vcote(268, LEVEL37, WALL, 'H = 37', 'ok', 250, 'r', 11));
-      setTimeout(() => { showFeedback('ok', STEPS[2].conclusion); setTimeout(then, 500); }, 700);
-    });
-  }, 900);
-}
-
-/* =====================================================================
-   4 bis. Étape 3 — Départ du cintrage : le triangle rectangle naît de la première montée
-   A = début de la montée (sur l'axe du tube plaqué), B = angle droit,
-   C = point où le tube atteint sa hauteur (sur l'axe de la partie haute)
-   ===================================================================== */
-const TA = [FLAT0 - H_PX, AX], TB = [FLAT0, AX], TC = [FLAT0, AX - H_PX];
-function drawStepDepart(){
-  // 1. tout s'estompe sauf la première montée, gardée nette par-dessus
-  const d = $('tbBase').getAttribute('d');
-  $('tubeFocus').querySelectorAll('path').forEach((p, i) => p.setAttribute('d', i === 2 ? bentPath(-16) : d));
-  $('tubeFocus').style.display = '';
-  svg.classList.add('focus-depart');
-  const g = $('stepDepart');
-  // 2. le triangle se pose sur la montée
-  setTimeout(() => {
-    append('stepDepart', `<g>
-      <path class="tri" d="M${TA} L${TB} L${TC} z"/>
-      <path d="M${TB[0] - 12},${TB[1]} L${TB[0] - 12},${TB[1] - 12} L${TB[0]},${TB[1] - 12}" fill="none" stroke="#1f4f7d" stroke-width="1.4"/>
-      <line id="sideV" class="tri-side" x1="${TB[0]}" y1="${TB[1]}" x2="${TC[0]}" y2="${TC[1]}"/>
-      <line id="sideH" class="tri-side" x1="${TA[0]}" y1="${TA[1]}" x2="${TB[0]}" y2="${TB[1]}"/>
-      <line class="tri-hyp" x1="${TA[0]}" y1="${TA[1]}" x2="${TC[0]}" y2="${TC[1]}"/>
-    </g>`);
-    // 3. la montée : 37, puis l'angle : 45°
-    setTimeout(() => {
-      append('stepDepart', `<text class="tri-lbl" x="${TB[0] - 8}" y="${(TB[1] + TC[1]) / 2 + 5}" text-anchor="end">37</text>`);
-      append('stepDepart', `<g><path d="M${TA[0] + 40},${TA[1]} A40,40 0 0 0 ${(TA[0] + 40 * Math.SQRT1_2).toFixed(1)},${(TA[1] - 40 * Math.SQRT1_2).toFixed(1)}" fill="none" stroke="#1f4f7d" stroke-width="1.4"/>
-        <text class="tri-lbl" x="${TA[0] + 46}" y="${TA[1] - 12}">45°</text></g>`);
-      // 4. la projection horizontale : ?
-      setTimeout(() => append('stepDepart', `<text id="lblH" class="tri-lbl q" x="${(TA[0] + TB[0]) / 2}" y="${TB[1] + 20}" text-anchor="middle">?</text>`), 700);
-    }, 700);
-  }, 900);
-}
-/* Coups de pouce de l'étape 3 : les noms des côtés */
-function drawHintDepart(n){
-  if (n === 1 && !$('hNames')){
-    append('stepDepart', `<g id="hNames">
-      <text class="tri-name" x="${TB[0] + 12}" y="${TOP - 6}">côté opposé</text>
-      <text class="tri-name" x="${(TA[0] + TB[0]) / 2}" y="${TB[1] + 36}" text-anchor="middle">côté adjacent</text>
-    </g>`);
-  }
-}
-/* Réussite : « ? » devient 37, les deux côtés se mettent en évidence */
-function successDepart(then){
-  if (!$('lblH')) append('stepDepart', `<text id="lblH" class="tri-lbl q" x="${(TA[0] + TB[0]) / 2}" y="${TB[1] + 20}" text-anchor="middle">?</text>`);
-  const lbl = $('lblH');
-  lbl.textContent = '37'; lbl.classList.remove('q'); lbl.classList.add('ok');
-  const v = $('sideV'), h = $('sideH');
-  v.classList.add('ok');
-  setTimeout(() => { h.classList.add('ok'); setTimeout(then, 700); }, 600);
-}
-/* Conséquence sur le dessin : la hauteur est atteinte en C, la montée commence 37 mm avant, en A */
-function consequenceDepart(then){
-  const g = $('stepDepart');
-  append('stepDepart', `<g><circle class="mark" cx="${TC[0]}" cy="${TC[1]}" r="5"/>
-    <text class="mark-lbl" x="${TC[0]}" y="${TC[1] - 40}" text-anchor="middle">hauteur atteinte</text></g>`);
-  setTimeout(() => {
-    // un repère descend en B puis recule de 37 mm jusqu'en A
-    const probe = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    probe.setAttribute('class', 'mark'); probe.setAttribute('r', 5); probe.setAttribute('cx', TB[0]); probe.setAttribute('cy', TB[1]);
-    g.appendChild(probe);
-    animate(TB[0], TA[0], 1400, x => probe.setAttribute('cx', x), () => {
-      append('stepDepart', `<g><circle class="mark" cx="${TA[0]}" cy="${TA[1]}" r="5"/>
-        <text class="mark-lbl" x="${TA[0] + 4}" y="${TA[1] - 70}" text-anchor="end">début de la montée</text>
-        <text class="mark-lbl" x="${TA[0] + 4}" y="${TA[1] - 54}" text-anchor="end">37 mm avant</text></g>`);
-      setTimeout(then, 600);
-    });
-  }, 900);
-}
-
-/* Coups de pouce dessinés (étape 1 : le rayon) */
-function drawHint(n){
-  if (state.step === 3) return drawHintDepart(n);
-  if (state.step === 4) return drawHintOblique(n);
-  if (state.step === 5) return drawHintDeux(n);
-  if (state.step !== 1) return;
-  const h = $('hints');
-  if (n === 1 && !$('hRad')){
-    h.insertAdjacentHTML('beforeend', `<g id="hRad" class="fade">
-      <line class="radius" x1="${CX[0]}" y1="${CY}" x2="${CX[0]}" y2="${TOP}"/>
-      <text x="${CX[0] + 8}" y="${CY - R / 2 + 3}" font-size="9" font-weight="600" fill="#1f4f7d">rayon</text></g>`);
-    requestAnimationFrame(() => requestAnimationFrame(() => $('hRad').classList.add('in')));
-  }
-  if (n === 2 && $('hRad')){
-    const t = $('hRad').querySelector('text'); t.textContent = 'rayon 11';
-  }
-}
-
-/* =====================================================================
-   5. Panneau question / réponse
-   ===================================================================== */
-function renderPanel(){
-  const st = STEPS[state.step];
-  if (st.mark){
-    $('panel').innerHTML = `<h2>Étape ${state.step} — ${st.title}</h2><p class="info">${st.info}</p>
-      <p class="question">${st.question}</p>
-      <div class="answer"><span class="unit" id="markInfo">${state.mark === null ? 'Clique sur le tube pour tracer ton trait.' : 'Trait placé ' + fmtAvant(state.mark) + ' le repère.'}</span>
-        ${state.solved ? '' : `<button class="btn primary" id="btnMark" type="button" ${state.mark === null ? 'disabled' : ''}>Vérifier mon repère</button>`}</div>
-      <div id="fb"></div>`;
-    const b = $('btnMark'); if (b) b.addEventListener('click', verifyMark);
-    return;
-  }
-  let html = `<h2>Étape ${state.step} — ${st.title}</h2><p class="info">${st.info}</p>
-    <p class="question">${st.question}</p>
-    <div class="answer">
-      <input type="number" id="inp" inputmode="decimal" step="0.5" min="0" max="200" aria-label="Réponse en millimètres" ${state.solved ? 'disabled' : ''} value="${state.solved ? st.answer : ''}">
-      <span class="unit">mm</span>
-      ${state.solved ? '' : `<button class="btn primary" id="btnCheck" type="button">Vérifier</button>
-      <button class="btn" id="btnHint" type="button" ${state.hints >= st.hints.length ? 'disabled' : ''}>Coup de pouce</button>`}
-    </div>
-    <div id="fb"></div>`;
-  $('panel').innerHTML = html;
-  const inp = $('inp');
-  if (!state.solved){
-    $('btnCheck').addEventListener('click', check);
-    inp.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
-    $('btnHint').addEventListener('click', () => giveHint());
-    inp.focus();
-  }
-}
-function showFeedback(cls, text){
-  $('fb').insertAdjacentHTML('beforeend', `<div class="feedback ${cls}">${text}</div>`);
-}
-function giveHint(){
-  const st = STEPS[state.step];
-  if (state.hints >= st.hints.length) return;
-  state.hints++;
-  drawHint(state.hints);
-  showFeedback('hint', st.hints[state.hints - 1]);
-  const b = $('btnHint'); if (b) b.disabled = state.hints >= st.hints.length;
-}
-
-function check(){
-  const st = STEPS[state.step], inp = $('inp');
-  const v = parseFloat(inp.value.replace(',', '.'));
-  if (isNaN(v)){ inp.focus(); return; }
-  state.answers[state.step] = v;   // dernière valeur vérifiée (sauvegarde)
-  $('fb').querySelectorAll('.feedback.err').forEach(e => e.remove());
-  if (Math.abs(v - st.answer) <= (st.tol ?? 0.01) + 1e-9){ success(); return; }
-  state.attempts++;
-  if (state.step === 5 && v >= 52.2 && v <= 52.4) flashBoth();
-  showFeedback('err', st.wrong(v));
-  // Après deux erreurs, le coup de pouce visuel arrive de lui-même
-  if (state.attempts === 2 && state.hints === 0) giveHint();
-  else if (state.attempts >= 3 && state.hints === 1) giveHint();
-  inp.select();
-}
-
-/* =====================================================================
-   6. Réussite : le dessin évolue, puis « Continuer »
-   ===================================================================== */
-function success(){
-  state.solved = true; renderPanel();
-  const st = STEPS[state.step];
-  const done = () => {
-    showFeedback('ok', st.ok);
-    if (st.ok2) showFeedback('ok', st.ok2);
-    const buttons = () => {
-      if (state.step < 6) $('fb').insertAdjacentHTML('beforeend', `<div class="row"><button class="btn primary" id="btnNext" type="button">Continuer</button></div>`);
-      else $('fb').insertAdjacentHTML('beforeend', `<div class="row"><button class="btn primary" id="btnEnd" type="button">Continuer</button><button class="btn" id="btnAgain" type="button">Recommencer</button></div>`);
-      const n = $('btnNext'); if (n) n.addEventListener('click', nextStep);
-      const e = $('btnEnd'); if (e) e.addEventListener('click', () => { e.disabled = true; showFeedback('ok', 'Étape 6 terminée.'); }, { once: true });
-      const a = $('btnAgain'); if (a) a.addEventListener('click', () => { reset(); renderSteps(); });
-    };
-    if (state.step === 2) transitionH(buttons);
-    else if (state.step === 3) consequenceDepart(buttons);
-    else buttons();
-  };
-
-  if (state.step === 1){
-    // le niveau 32 se trace, puis la cote « ? » devient « 32 »
-    $('hints').innerHTML = '';
-    const q = $('lvQ'); if (q) q.remove();
-    $('cotes').innerHTML = vcote(CX[0] - R - 34, CY, WALL, '21', '', CX[0] - R - 4, 'l')
-                         + vcote(CX[0] + R + 34, TOP, CY + R, 'Ø 22', '', CX[0] + R + 4);
-    addLevel('lv32', TOP, 300, 660, 'ok', () => {
-      append('cotes', vcote(600, TOP, WALL, '32', 'ok', null, 'r', 11));
-      setTimeout(done, 700);
-    });
-  }
-  if (state.step === 2){
-    const q = $('lvQ'); if (q) q.remove();
-    $('cotes').querySelectorAll('.cote.q').forEach(e => e.remove());
-    addLevel('lv37', LEVEL37, 300, 660, 'ok', () => {
-      append('cotes', vcote(650, LEVEL37, WALL, '37', 'ok', null, 'r', 11));
-      setTimeout(done, 700);
-    });
-  }
-  if (state.step === 3){
-    successDepart(done);
-  }
-  if (state.step === 4){
-    successOblique(done);
-  }
-  if (state.step === 5){
-    successDeux(done);
-  }
-  if (state.step === 6){
-    successTrace(done);
-  }
-}
-function nextStep(){
-  state.step++; state.solved = false; state.attempts = 0; state.hints = 0;
-  renderSteps();
-  if (state.step === 3){
-    // le franchissement se réalise avec H = 37, puis la question du départ du cintrage
-    $('panel').innerHTML = '';
-    finalAnimation(() => setTimeout(() => { drawStep(); renderPanel(); }, 1800));
-  } else { drawStep(); renderPanel(); }
-}
-function renderSteps(){
-  document.querySelectorAll('#steps li').forEach(li => {
-    const n = +li.dataset.step;
-    li.classList.toggle('current', n === state.step);
-    li.classList.toggle('done', n < state.step);
-  });
-}
-
-/* Animation du franchissement (H = 37 est acquis) : la vue s'élargit,
-   le tube se cintre et franchit les deux tubes, puis les cotes finales. */
-function finalAnimation(done){
-  const cotes = $('cotes');
-  setTimeout(() => {
-    // 2. la vue s'élargit, le deuxième tube apparaît
-    setTimeout(() => {
-      $('obs2').classList.add('in');
-      animate(0, 1, 1600, p => setViewBox(ZOOM.map((z, i) => z + (FULL[i] - z) * p)), () => {
-        // 3. le tube se cintre le long de son tracé
-        $('ghost').classList.remove('in'); $('tubeFlat').classList.remove('in');
-        $('levels').innerHTML = ''; cotes.innerHTML = '';
-        $('wallLbl').setAttribute('font-size', 15);
-        const d = bentPath();
-        ['tbEdge', 'tbBase', 'tbShine'].forEach((id, i) => {
-          const p = $(id); p.setAttribute('d', i === 2 ? bentPath(-16) : d);
-          p.setAttribute('stroke-dasharray', '1000'); p.setAttribute('stroke-dashoffset', '1000');
-        });
-        $('tubeBent').style.display = '';
-        const start = 1000 * (1 - (250 - X0) / pathLen(d));   // on part de la longueur déjà plaquée
-        animate(start, 0, 2800, v => ['tbEdge', 'tbBase', 'tbShine'].forEach(id => $(id).setAttribute('stroke-dashoffset', v)), () => {
-          // 4. cotes finales : H et le jeu de 5 mm
-          append('cotes', `<line class="axis" x1="${FLAT1 + 20}" y1="${AX - H_PX}" x2="1060" y2="${AX - H_PX}"/>
-                           <line class="axis" x1="${FLAT1 + H_PX + 20}" y1="${AX}" x2="1060" y2="${AX}"/>`);
-          append('cotes', vcote(1040, AX - H_PX, AX, 'H = 37', 'ok', null, 'top', 15));
-          append('cotes', vcote(520, LEVEL37, TOP, 'jeu 5', 'ok', CX[0] + R + 4, 'below', 14));
-          setTimeout(done, 500);
-        });
-      });
-    }, 900);
-  }, 300);
-}
-function pathLen(d){
-  const p = document.createElementNS('http://www.w3.org/2000/svg', 'path'); p.setAttribute('d', d);
-  svg.appendChild(p); const l = p.getTotalLength(); p.remove(); return l;
-}
-
-$('btnReset').addEventListener('click', () => { reset(); renderSteps(); });
-
-/* =====================================================================
-   COUCHE « MISSIONS » — accueil, sauvegarde PDF, reprise
-   L'exercice ci-dessus est la Mission 1 ; chaque mission fournit
-   open() / snapshot() / restore(save) / progress().
-   ===================================================================== */
-const APP_ID = 'cointer-cmis', SAVE_VERSION = 1, SAVE_MARK = 'CMIS_SAVE_V1:';
-const STEP_NAMES = [...document.querySelectorAll('#steps li')].map(li => li.textContent.replace(/^\s*\d+\s*/, '').trim());
-
-const MISSIONS = [
-  {
-    id: 'mission-1',
-    number: 1,
-    title: 'Franchissement de deux tubes',
-    description: 'Préparer mathématiquement le tracé avant cintrage.',
-    file: 'Mission_1_Franchissement_sauvegarde.pdf',
-    stepNames: STEP_NAMES,
-    started: false,
-    open(fresh){ if (fresh || !this.started){ reset(); renderSteps(); this.started = true; } },
-    progress(){ return { step: state.step, solved: !!state.solved, total: STEP_NAMES.length }; },
-    snapshot(){
-      return { step: state.step, solved: !!state.solved, attempts: state.attempts, hints: state.hints,
-               answers: { ...state.answers }, missionState: { mark: state.mark ?? null } };
-    },
-    restore(save){ return restoreMission1(save); }
-  }
-];
-const missionById = id => MISSIONS.find(m => m.id === id);
-const _setTimeout = window.setTimeout.bind(window);
-
-/* ---------- accueil ---------- */
-function renderHome(){
-  $('missionList').innerHTML = MISSIONS.map(m => {
-    let status = 'À commencer', cls = '', btn = 'Commencer';
-    if (m.started){
-      const p = m.progress();
-      if (p.step >= p.total && p.solved){ status = 'Terminée'; cls = 'done'; btn = 'Revoir'; }
-      else { status = 'En cours'; cls = 'progress'; btn = 'Reprendre'; }
-    }
-    return `<div class="mission-card">
-      <div class="thumb" aria-hidden="true">
-        <svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
-          <path d="M6,38 L16,38 L26,20 L38,20 L46,34" fill="none" stroke="#1f4f7d" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
-          <circle cx="30" cy="34" r="6" fill="#fff" stroke="#c27a3f" stroke-width="2"/>
-          <line x1="16" y1="44" x2="26" y2="44" stroke="#1f4f7d" stroke-width="1.5"/>
-          <line x1="16" y1="41" x2="16" y2="47" stroke="#1f4f7d" stroke-width="1.5"/>
-          <line x1="26" y1="41" x2="26" y2="47" stroke="#1f4f7d" stroke-width="1.5"/>
-        </svg>
-      </div>
-      <div>
-        <div class="num">Mission ${m.number}</div>
-        <h3>${m.title}</h3>
-        <p>${m.description}</p>
-        <div class="meta"><span>${m.stepNames.length} étapes</span><span>calcul → mesure → traçage</span><span>tube cuivre, pince à cintrer</span></div>
-      </div>
-      <div class="side"><span class="status ${cls}">${status}</span>
-        <button class="btn primary big" type="button" data-open="${m.id}">${btn}</button></div>
-    </div>`;
-  }).join('');
-  $('missionCount').textContent = MISSIONS.length === 1 ? '1 mission' : `${MISSIONS.length} missions`;
-  $('missionList').querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => openMission(b.dataset.open, false)));
-}
-function showHome(){ document.body.classList.add('at-home'); $('mission').style.display = 'none'; $('home').style.display = ''; $('homeErr').classList.add('hidden'); renderHome(); window.scrollTo(0, 0); }
-function openMission(id, fresh){
-  const m = missionById(id); if (!m) return;
-  m.open(fresh);
-  document.body.classList.remove('at-home'); $('home').style.display = 'none'; $('mission').style.display = ''; $('saveNote').classList.add('hidden');
-  window.scrollTo(0, 0);
-}
-$('btnHome').addEventListener('click', showHome);
-
-/* ---------- sauvegarde : PDF autonome avec marqueur de reprise ---------- */
-function b64urlEncode(str){ return btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
-function b64urlDecode(str){ str = str.replace(/-/g, '+').replace(/_/g, '/'); while (str.length % 4) str += '='; return decodeURIComponent(escape(atob(str))); }
-
-// Texte → octets WinAnsi (Helvetica standard) ; les caractères absents deviennent « ? »
-const WINANSI = { '\u2019': 0x92, '\u2018': 0x91, '\u201C': 0x93, '\u201D': 0x94, '\u2013': 0x96, '\u2014': 0x97, '\u2022': 0x95, '\u20AC': 0x80, '\u2026': 0x85, '\u0152': 0x8C, '\u0153': 0x9C };
-function pdfText(str){
-  let out = '';
-  for (const ch of str){
-    const c = ch.codePointAt(0);
-    let b = c < 128 ? c : (c >= 0xA0 && c <= 0xFF) ? c : (WINANSI[ch] ?? 63);
-    if (b === 40 || b === 41 || b === 92) out += '\\';
-    out += String.fromCharCode(b);
-  }
-  return out;
-}
-function buildSavePdf(lines, payload){
-  let y = 790, content = '';
-  for (const l of lines){
-    y -= l.gap ?? (l.size + 8);
-    if (l.text) content += `BT /${l.bold ? 'F2' : 'F1'} ${l.size} Tf 60 ${y} Td (${pdfText(l.text)}) Tj ET\n`;
-  }
-  const objs = [null,
-    '<< /Type /Catalog /Pages 2 0 R >>',
-    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
-    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>',
-    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
-    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>',
-    `<< /Length ${content.length} >>\nstream\n${content}endstream`];
-  // le marqueur de reprise est un commentaire PDF, en clair dans les octets du fichier
-  let out = '%PDF-1.4\n%\xE2\xE3\xCF\xD3\n%' + SAVE_MARK + payload + '\n';
-  const off = [];
-  for (let i = 1; i < objs.length; i++){ off[i] = out.length; out += `${i} 0 obj\n${objs[i]}\nendobj\n`; }
-  const xref = out.length;
-  out += `xref\n0 ${objs.length}\n0000000000 65535 f \n`;
-  for (let i = 1; i < objs.length; i++) out += String(off[i]).padStart(10, '0') + ' 00000 n \n';
-  out += `trailer\n<< /Size ${objs.length} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
-  const bytes = new Uint8Array(out.length);
-  for (let i = 0; i < out.length; i++) bytes[i] = out.charCodeAt(i) & 0xFF;
-  return bytes;
-}
-function saveWork(){
-  const m = missionById('mission-1');
-  const snap = m.snapshot();
-  const save = { app: APP_ID, version: SAVE_VERSION, missionId: m.id, step: snap.step, solved: snap.solved, attempts: snap.attempts,
-                 hints: snap.hints, answers: snap.answers, missionState: snap.missionState, savedAt: new Date().toISOString() };
-  const when = new Date().toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' });
-  const total = m.stepNames.length;
-  const finished = snap.step >= total && snap.solved;
-  const lines = [
-    { text: 'CO-INTERVENTION MATHS × CMIS', size: 18, bold: true },
-    { text: `Mission ${m.number} — ${m.title}`, size: 14, bold: true, gap: 30 },
-    { text: 'Sauvegarde de travail', size: 12, gap: 24 },
-    { text: `Progression : étape atteinte : ${snap.step} sur ${total}${finished ? ' — mission terminée' : ''}`, size: 12, gap: 34 },
-    { text: `Travail enregistré le : ${when}`, size: 12 },
-    { text: '', size: 12, gap: 20 },
-    ...m.stepNames.map((n, i) => {
-      const k = i + 1;
-      const tag = (k < snap.step || (k === snap.step && snap.solved)) ? '[validée]' : k === snap.step ? '[en cours]' : '[à venir]';
-      return { text: `${tag}  Étape ${k} — ${n}`, size: 12 };
-    }),
-    { text: '', size: 12, gap: 30 },
-    { text: 'Garde ce fichier : il permet de reprendre le travail là où il a été laissé', size: 10 },
-    { text: '(page d\u2019accueil, bouton « Reprendre mon travail »). Ne pas le modifier.', size: 10 }
-  ];
-  const bytes = buildSavePdf(lines, b64urlEncode(JSON.stringify(save)));
-  const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
-  const a = document.createElement('a'); a.href = url; a.download = m.file; document.body.appendChild(a); a.click(); a.remove();
-  _setTimeout(() => URL.revokeObjectURL(url), 4000);
-  const note = $('saveNote');
-  note.innerHTML = '<b>Travail enregistré</b>Garde ce PDF : il te permettra de reprendre ton travail lors de la prochaine séance.';
-  note.classList.remove('hidden');
-  clearTimeout(note._t); note._t = _setTimeout(() => note.classList.add('hidden'), 8000);
-}
-$('btnSave').addEventListener('click', saveWork);
-
-/* ---------- reprise : lecture du PDF ---------- */
-function parseSaveFile(buf){
-  const text = new TextDecoder('latin1').decode(new Uint8Array(buf));
-  const i = text.indexOf(SAVE_MARK);
-  if (i < 0) throw new Error('marqueur absent');
-  const payload = text.slice(i + SAVE_MARK.length).split(/\s/)[0];
-  const save = JSON.parse(b64urlDecode(payload));
-  if (save.app !== APP_ID || typeof save.version !== 'number' || save.version > SAVE_VERSION || !missionById(save.missionId)) throw new Error('sauvegarde incompatible');
-  return save;
-}
-$('btnResume').addEventListener('click', () => { $('fileResume').value = ''; $('fileResume').click(); });
-$('fileResume').addEventListener('change', () => {
-  const f = $('fileResume').files[0]; if (!f) return;
-  const err = () => { $('homeErr').textContent = 'Ce fichier n\u2019est pas une sauvegarde valide de cette application.'; $('homeErr').classList.remove('hidden'); };
-  const rd = new FileReader();
-  rd.onerror = err;
-  rd.onload = async () => {
-    let save;
-    try { save = parseSaveFile(rd.result); } catch (e) { err(); return; }
-    try {
-      openMission(save.missionId, true);
-      await missionById(save.missionId).restore(save);
-      window.scrollTo(0, 0);
-    } catch (e) { fastMode(false); showHome(); err(); }
-  };
-  rd.readAsArrayBuffer(f);
+function cancel(){if(active){active=null;clearPreview();status('Tracé interrompu.');}}
+svg.addEventListener('pointerdown',pointerDown);svg.addEventListener('pointermove',pointerMove);svg.addEventListener('pointerup',pointerUp);svg.addEventListener('pointercancel',cancel);svg.addEventListener('pointerleave',()=>{if(!active){cursorLayer.replaceChildren();$('coordinates').textContent='x : — · y : —';}});
+document.querySelectorAll('[data-tool]').forEach(btn=>btn.addEventListener('click',()=>selectTool(btn.dataset.tool)));
+$('undoBtn').addEventListener('click',undo);$('redoBtn').addEventListener('click',redo);
+$('gridSwitch').addEventListener('change',e=>{settings.grid=e.target.checked;$('gridVisual').setAttribute('visibility',settings.grid?'visible':'hidden');saveLocal();});
+$('marginSwitch').addEventListener('change',e=>{settings.margin=e.target.checked;$('marginVisual').setAttribute('visibility',settings.margin?'visible':'hidden');saveLocal();});
+$('snapSwitch').addEventListener('change',e=>{settings.snap=e.target.checked;saveLocal();toast(settings.snap?'Précision de 5 mm activée.':'Placement libre activé.');});
+function download(name,blob){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),8000);}
+function exportSvgString(){const clone=svg.cloneNode(true);['referenceLayer','previewLayer','cursorLayer'].forEach(id=>clone.querySelector('#'+id)?.remove());clone.setAttribute('width','297mm');clone.setAttribute('height','210mm');clone.setAttribute('xmlns',NS);clone.removeAttribute('class');return new XMLSerializer().serializeToString(clone);}
+$('svgBtn').addEventListener('click',()=>{download('dessin-geometrie-CMIS.svg',new Blob([exportSvgString()],{type:'image/svg+xml;charset=utf-8'}));toast('Dessin vectoriel SVG téléchargé.');});
+$('pngBtn').addEventListener('click',()=>{const url=URL.createObjectURL(new Blob([exportSvgString()],{type:'image/svg+xml;charset=utf-8'})),img=new Image();img.onload=()=>{let canvas=document.createElement('canvas');canvas.width=3508;canvas.height=2480;let ctx=canvas.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);canvas.toBlob(blob=>{if(blob)download('dessin-geometrie-CMIS.png',blob);else toast('Export PNG impossible : utilisez le SVG.');},'image/png');URL.revokeObjectURL(url);};img.onerror=()=>{URL.revokeObjectURL(url);toast('Export PNG impossible : utilisez le SVG.');};img.src=url;});
+$('saveBtn').addEventListener('click',()=>{const pack={version:2,format:'CMIS-A4-paysage',shapes,settings,nextId,nextPoint,mission:{step:missionStep,passed:missionPassed,answers:missionAnswers}};download('projet-geometrie-CMIS.json',new Blob([JSON.stringify(pack,null,2)],{type:'application/json'}));toast('Projet enregistré : vous pourrez le rouvrir.');});
+$('loadBtn').addEventListener('click',()=>$('fileLoad').click());
+$('fileLoad').addEventListener('change',async e=>{let file=e.target.files?.[0];e.target.value='';if(!file)return;try{if(file.size>3000000)throw Error('Projet trop volumineux');const raw=JSON.parse(await file.text());if(raw.format!=='CMIS-A4-paysage'||!Array.isArray(raw.shapes)||raw.shapes.length>3000)throw Error('Format de projet non reconnu');
+ const clean=raw.shapes.map(s=>{if(!s||!['pen','segment','circle','arc','angle','point'].includes(s.type))throw Error('Tracé non reconnu');if(typeof s.color!=='string'||!colors.includes(s.color))s.color=colors[0];s.width=clamp(Number(s.width)||.65,.2,3);const good=p=>p&&finite(p.x)&&finite(p.y)&&Math.abs(p.x)<5000&&Math.abs(p.y)<5000;
+ if(s.type==='pen'){if(!Array.isArray(s.points)||s.points.length>25000||!s.points.every(good))throw Error('Points invalides');}
+ if(s.type==='segment'&&(!good(s.a)||!good(s.b)))throw Error('Segment invalide');
+ if((s.type==='circle'||s.type==='arc')&&(!good(s.center)||!finite(s.r)||s.r<=0||s.r>1000))throw Error('Cercle invalide');
+ if(s.type==='arc'&&(!finite(s.a0)||!finite(s.a1)||positiveSpan(s.a0,s.a1)<.05))throw Error('Arc invalide');
+ if(s.type==='angle'&&(!good(s.origin)||!good(s.b)||!good(s.c)||!finite(s.angle)))throw Error('Angle invalide');
+ if(s.type==='point'&&(!finite(s.x)||!finite(s.y)))throw Error('Point invalide');return s;});
+ if(shapes.length&&!confirm('Remplacer les tracés actuels par ceux du projet ouvert ?'))return;
+ pushUndo();shapes=clean;nextId=Math.max(1,...shapes.map(s=>Number(s.id)||0))+1;selectedReference=null;missionStep=clamp(Number(raw.mission?.step)||0,0,MISSION.length);missionPassed=Array.isArray(raw.mission?.passed)?raw.mission.passed:[];missionAnswers=raw.mission?.answers&&typeof raw.mission.answers==='object'?raw.mission.answers:{};changed();renderMission();toast('Projet chargé : '+shapes.length+' tracé(s).');
+ }catch(err){toast('Impossible d’ouvrir ce fichier de projet.');}});
+$('printBtn').addEventListener('click',()=>window.print());
+$('fullscreenBtn').addEventListener('click',async()=>{try{if(document.fullscreenElement){await document.exitFullscreen();}else{await $('app').requestFullscreen();}}catch(e){toast('Plein écran indisponible sur ce navigateur.');}});
+$('clearBtn').addEventListener('click',()=>{if(!shapes.length){toast('La feuille est déjà vierge.');return;}if(!confirm('Effacer tous les tracés de cette feuille ? Cette action pourra être annulée.'))return;pushUndo();shapes=[];selectedReference=null;missionStep=0;missionPassed=[];missionAnswers={};changed();renderMission();toast('La feuille est vide.');});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'){cancel();return;}
+ if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='z'){e.preventDefault();if(e.shiftKey)redo();else undo();return;}
+ if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='y'){e.preventDefault();redo();return;}
+ if(isEditableFocus()||e.metaKey||e.ctrlKey||e.altKey)return;
+ const keys={p:'pen',r:'ruler',c:'compass',e:'square',a:'protractor',m:'point',g:'eraser',v:'select'};let t=keys[e.key.toLowerCase()];if(t){e.preventDefault();selectTool(t);}
 });
-
-/* Rejeu instantané de la Mission 1 jusqu'à l'état sauvegardé : les étapes
-   validées sont rejouées avec leurs bonnes réponses, sans animation, puis
-   l'étape en cours reçoit ses essais, ses coups de pouce et sa saisie. */
-function fastMode(on){ FAST = on; window.setTimeout = on ? ((fn, ms, ...a) => _setTimeout(fn, 0, ...a)) : _setTimeout; }
-function waitFor(cond, max = 4000){
-  return new Promise(res => { const t0 = performance.now(); (function poll(){ if (cond() || performance.now() - t0 > max) res(); else _setTimeout(poll, 10); })(); });
+try{const saved=localStorage.getItem(STORE);if(saved){const d=JSON.parse(saved);if(Array.isArray(d.shapes))shapes=d.shapes;if(d.settings){for(let k of Object.keys(settings))if(k in d.settings)settings[k]=d.settings[k];}if(d.mission){missionStep=clamp(Number(d.mission.step)||0,0,20);missionPassed=Array.isArray(d.mission.passed)?d.mission.passed:[];missionAnswers=d.mission.answers&&typeof d.mission.answers==='object'?d.mission.answers:{}}nextId=Number(d.nextId)||1;nextPoint=Number(d.nextPoint)||0;}}catch(e){}
+$('gridSwitch').checked=!!settings.grid;$('marginSwitch').checked=!!settings.margin;$('snapSwitch').checked=!!settings.snap;
+$('gridVisual').setAttribute('visibility',settings.grid?'visible':'hidden');$('marginVisual').setAttribute('visibility',settings.margin?'visible':'hidden');
+if(!colors.includes(settings.color))settings.color=colors[0];
+render();selectTool('pen');historyUpdate();
+/* ────────────── Guided siphon construction ────────────── */
+const P={O:{x:130,y:130},T1:{x:100,y:130},T2:{x:160,y:130},A:{x:100,y:40},B:{x:160,y:70},C:{x:180,y:70},E:{x:180,y:50},D:{x:230,y:50}};
+const MISSION=[
+ {phase:'1 · Repères',title:'Préparer la feuille',body:'Active l’affichage de la marge située à 1 cm des quatre bords de la feuille.',tool:null,hint:'Utilise le bouton « Marge 1 cm », situé juste au-dessus de ta feuille.',fail:'La marge de 1 cm n’est pas encore affichée.'},
+ {phase:'1 · Repères',title:'Placer le centre O',body:'Place le point O à 13 cm du bord gauche et à 13 cm du bord supérieur.',tool:'point',hint:'Avec l’outil Point, nomme le point « O ». Les coordonnées de la souris s’affichent sous la feuille.',fail:'Il manque le point O, ou il n’est pas placé au bon endroit.'},
+ {phase:'2 · Grand arrondi',title:'Construire un cercle de rayon 3 cm',body:'Avec le compas, trace un cercle de centre O et de rayon 3 cm.',tool:'compass',hint:'Règle le rayon du compas sur 3 cm. Place sa pointe sur O puis trace le cercle.',fail:'Le cercle doit être centré en O et avoir un rayon de 3 cm.'},
+ {phase:'2 · Grand arrondi',title:'Tracer le diamètre horizontal',body:'Avec la règle, trace le diamètre horizontal du cercle, de gauche à droite, en passant par O.',tool:'ruler',hint:'Le diamètre doit mesurer 6 cm : il relie les deux extrémités gauche et droite du cercle.',fail:'Le diamètre horizontal de 6 cm n’a pas été reconnu.'},
+ {phase:'2 · Grand arrondi',title:'Nommer les points de tangence',body:'Place T₁ à l’extrémité gauche du diamètre et T₂ à son extrémité droite.',tool:'point',hint:'Choisis l’outil Point. Nomme le premier « T1 », puis le deuxième « T2 ». Ces points serviront à raccorder les parties droites.',fail:'Les deux points T1 et T2 doivent être correctement nommés et placés aux extrémités du diamètre.'},
+ {phase:'2 · Grand arrondi',title:'Conserver le demi-cercle du bas',body:'Avec la gomme, supprime la moitié supérieure du cercle : garde seulement l’arc inférieur en forme de U.',tool:'eraser',hint:'Dans la gomme, choisis « Garder le bas », puis clique sur la moitié supérieure du cercle.',fail:'Le grand cercle doit être transformé en demi-cercle inférieur.'},
+ {phase:'3 · Parties droites',title:'Tracer la première partie droite',body:'À partir de T₁, construis avec l’équerre un segment vertical de 9 cm vers le haut.',tool:'square',hint:'Prends le diamètre comme droite d’appui. L’équerre permet de tracer sa perpendiculaire à partir de T1.',fail:'Il faut un segment vertical de 9 cm, partant de T1 vers le haut.'},
+ {phase:'3 · Parties droites',title:'Tracer la seconde partie droite',body:'À partir de T₂, construis un segment vertical de 6 cm vers le haut.',tool:'square',hint:'Conserve le diamètre comme droite d’appui. Ce nouveau segment doit être parallèle au premier.',fail:'Il faut un segment vertical de 6 cm, partant de T2 vers le haut.'},
+ {phase:'3 · Parties droites',title:'Placer le point B',body:'Nomme B l’extrémité supérieure du segment de 6 cm.',tool:'point',hint:'Le point B est en haut du segment vertical de droite. Clique sur son extrémité avec l’outil Point.',fail:'Le point B n’est pas reconnu à l’extrémité du segment droit.'},
+ {phase:'4 · Petit raccord',title:'Repérer le futur centre du coude',body:'À partir de B, trace un petit segment horizontal de 2 cm vers la droite.',tool:'ruler',hint:'Utilise une règle réglée à 2 cm. Ce segment de construction permettra de placer le centre du deuxième cercle.',fail:'Le segment horizontal de 2 cm partant de B n’a pas été reconnu.'},
+ {phase:'4 · Petit raccord',title:'Placer le point C',body:'Nomme C l’extrémité droite du segment de 2 cm.',tool:'point',hint:'C sera le centre du petit cercle. Il doit se situer à la même hauteur que B, exactement 2 cm à droite.',fail:'Le point C doit se trouver à 2 cm à droite de B.'},
+ {phase:'4 · Petit raccord',title:'Tracer le second cercle',body:'Avec le compas, trace un cercle de centre C et de rayon 2 cm.',tool:'compass',hint:'Règle le rayon à 2 cm. Le cercle doit passer par B.',fail:'Le second cercle doit être centré en C et avoir un rayon de 2 cm.'},
+ {phase:'4 · Petit raccord',title:'Conserver le quart supérieur gauche',body:'Avec la gomme, conserve uniquement le quart de cercle situé en haut à gauche de C.',tool:'eraser',hint:'Choisis « Garder ¼ haut gauche » dans les réglages de la gomme. Clique sur une partie du cercle qui doit disparaître.',fail:'Le petit cercle doit être réduit à son quart supérieur gauche.'},
+ {phase:'4 · Petit raccord',title:'Placer le point E',body:'Nomme E le point le plus haut de ce petit arc de cercle.',tool:'point',hint:'Le point E est situé exactement 2 cm au-dessus de C. Il marque le début de la dernière partie droite.',fail:'Le point E doit être situé au sommet du petit arc de cercle.'},
+ {phase:'4 · Petit raccord',title:'Tracer la sortie du siphon',body:'À partir de E, trace un segment horizontal de 5 cm vers la droite.',tool:'ruler',hint:'Règle la règle sur 5 cm. Le segment doit partir de E et se prolonger vers la droite.',fail:'Il faut un segment horizontal de 5 cm, partant de E vers la droite.'},
+ {phase:'4 · Petit raccord',title:'Placer le point D',body:'Nomme D l’extrémité droite du dernier segment.',tool:'point',hint:'Le point D marque la sortie du siphon. Il doit se situer à 5 cm de E.',fail:'Le point D n’est pas correctement placé.'},
+ {phase:'5 · Contrôle',title:'Vérifier les tangences',body:'Les deux parties droites du U se raccordent-elles sans angle avec le grand arc ?',tool:null,hint:'Au point de tangence, le rayon est perpendiculaire à la partie droite. Vérifie les positions de T1 et T2.',answerType:'choice',options:[['','Choisis ta réponse'],['oui','Oui, elles sont tangentes'],['non','Non, elles se coupent en angle']],fail:'Regarde le raccordement au niveau de T1 et T2, puis choisis la réponse correcte.'},
+ {phase:'6 · Calculs',title:'Longueur du grand arrondi',body:'Le grand arc est un demi-cercle de rayon 3 cm. Calcule sa longueur avec π ≈ 3,14.',tool:null,hint:'La circonférence d’un cercle est 2 × π × R. Ici, on n’en garde que la moitié.',answerType:'number',unit:'cm',fail:'Calcule la moitié de la circonférence du cercle de rayon 3 cm.'},
+ {phase:'6 · Calculs',title:'Longueur du petit raccord',body:'Le petit arc est un quart de cercle de rayon 2 cm. Calcule sa longueur avec π ≈ 3,14.',tool:null,hint:'Cette fois, il faut prendre un quart de la circonférence du cercle de rayon 2 cm.',answerType:'number',unit:'cm',fail:'Calcule un quart de la circonférence du cercle de rayon 2 cm.'},
+ {phase:'6 · Calculs',title:'Longueur totale du siphon',body:'Additionne les trois parties droites et les deux arcs. Quelle est la longueur totale de l’axe du tube ?',tool:null,hint:'Les parties droites mesurent 9 cm, 6 cm et 5 cm. Ajoute les deux longueurs d’arcs calculées précédemment.',answerType:'number',unit:'cm',fail:'Additionne 9, 6 et 5 cm aux deux longueurs des arcs.'}
+];
+const near=(a,b,t=2.8)=>a&&b&&dist(a,b)<=t;
+const pAt=(label,position)=>shapes.some(s=>s.type==='point'&&String(s.label||'').toUpperCase().replace(/[₁]/g,'1').replace(/[₂]/g,'2')===label&&near({x:s.x,y:s.y},position,2.8));
+const sAt=(a,b)=>shapes.some(s=>s.type==='segment'&&((near(s.a,a,3.0)&&near(s.b,b,3.0))||(near(s.a,b,3.0)&&near(s.b,a,3.0))));
+const cAt=(center,r)=>shapes.some(s=>(s.type==='circle'||s.type==='arc')&&near(s.center,center,2.3)&&Math.abs(s.r-r)<1.7);
+const aAt=(center,r,a0,a1)=>shapes.some(s=>s.type==='arc'&&near(s.center,center,2.3)&&Math.abs(s.r-r)<1.7&&Math.abs(s.a0-a0)<.08&&Math.abs(s.a1-a1)<.08);
+function stepIsCorrect(i){
+ switch(i){
+  case 0:return settings.margin;
+  case 1:return pAt('O',P.O);
+  case 2:return pAt('O',P.O)&&cAt(P.O,30);
+  case 3:return cAt(P.O,30)&&sAt(P.T1,P.T2);
+  case 4:return sAt(P.T1,P.T2)&&pAt('T1',P.T1)&&pAt('T2',P.T2);
+  case 5:return aAt(P.O,30,0,Math.PI);
+  case 6:return aAt(P.O,30,0,Math.PI)&&sAt(P.T1,P.A);
+  case 7:return sAt(P.T1,P.A)&&sAt(P.T2,P.B);
+  case 8:return sAt(P.T2,P.B)&&pAt('B',P.B);
+  case 9:return pAt('B',P.B)&&sAt(P.B,P.C);
+  case 10:return sAt(P.B,P.C)&&pAt('C',P.C);
+  case 11:return pAt('C',P.C)&&cAt(P.C,20);
+  case 12:return aAt(P.C,20,Math.PI,1.5*Math.PI);
+  case 13:return aAt(P.C,20,Math.PI,1.5*Math.PI)&&pAt('E',P.E);
+  case 14:return pAt('E',P.E)&&sAt(P.E,P.D);
+  case 15:return sAt(P.E,P.D)&&pAt('D',P.D);
+  case 16:return aAt(P.O,30,0,Math.PI)&&sAt(P.T1,P.A)&&sAt(P.T2,P.B)&&aAt(P.C,20,Math.PI,1.5*Math.PI)&&sAt(P.E,P.D)&&missionAnswers[16]==='oui';
+  case 17:case 18:case 19:{const value=Number(String(missionAnswers[i]??'').trim().replace(',','.')),target=i===17?9.42:i===18?3.14:32.56;return String(missionAnswers[i]??'').trim()!==''&&finite(value)&&Math.abs(value-target)<.055;}
+ }
+ return false;
 }
-function settle(n = 10){ return new Promise(res => { (function tick(){ n-- > 0 ? _setTimeout(tick, 0) : requestAnimationFrame(() => res()); })(); }); }
-const panelReady = () => !!($('inp') || $('btnMark'));
-async function restoreMission1(save){
-  const total = STEP_NAMES.length;
-  const target = Math.max(1, Math.min(total, save.step | 0));
-  fastMode(true);
-  try {
-    reset(); renderSteps();
-    for (let k = 1; k < target; k++){
-      await waitFor(panelReady); await settle();
-      state.answers[k] = save.answers?.[k] ?? STEPS[k].answer;
-      if (k === 6){ state.mark = -37; placeMark(-37); }
-      success();
-      await waitFor(() => !!$('btnNext')); await settle();
-      nextStep();
-    }
-    await waitFor(panelReady); await settle();
-    state.attempts = save.attempts | 0;
-    state.answers = { ...(save.answers || {}) };
-    for (let i = 0; i < (save.hints | 0); i++) giveHint();
-    if (target === 6){
-      const m = save.missionState?.mark;
-      if (m !== null && m !== undefined) placeMark(save.solved ? -37 : m);
-    } else if ($('inp') && !save.solved && save.answers?.[target] !== undefined){
-      $('inp').value = save.answers[target];
-    }
-    if (save.solved){
-      if (target === 6) state.mark = -37;
-      success();
-      await waitFor(() => !!($('btnNext') || $('btnEnd'))); await settle();
-    }
-  } finally { await settle(); fastMode(false); }
+function missionToolName(s){return s.tool?nameMap[s.tool]:'Réflexion';}
+function prepareTool(i=missionStep){
+ const step=MISSION[i];if(!step||!step.tool)return;
+ const toolname=step.tool;
+ if(toolname==='point'){
+  const label=i===1?'O':i===4?(pAt('T1',P.T1)?'T2':'T1'):i===8?'B':i===10?'C':i===13?'E':i===15?'D':'A';
+  settings.pointLabel=label;settings.color='#1769db';
+ }
+ if(toolname==='compass'){
+  settings.compassFixed=true;settings.compassRadius=(i===2?3:2);settings.color='#93a5b7';settings.width=.55;
+ }
+ if(toolname==='ruler'){
+  settings.rulerFixed=true;settings.rulerLength=i===3?6:i===9?2:5;settings.color=(i===3||i===9)?'#93a5b7':'#1769db';settings.width=(i===3||i===9)?.4:.9;
+ }
+ if(toolname==='square'){
+  settings.squareFixed=true;settings.squareLength=i===6?9:6;settings.color='#1769db';settings.width=.9;
+  const diameter=shapes.find(s=>s.type==='segment'&&((near(s.a,P.T1)&&near(s.b,P.T2))||(near(s.a,P.T2)&&near(s.b,P.T1))));
+  if(diameter)selectedReference=diameter.id;
+ }
+ if(toolname==='eraser')settings.eraserMode=i===5?'bottom':'northwest';
+ selectTool(toolname);renderInspector();saveLocal();
+ $('toolSettingsBox').open=true;
+ if(i===4&&pAt('T1',P.T1))toast('Place maintenant T2 à droite du diamètre.');
+ else toast('Outil préparé. Réalise toi-même le tracé sur la feuille.');
 }
+function renderMission(){
+ const finished=missionStep>=MISSION.length;
+ $('missionCount').textContent=finished?'20 / 20':(missionStep+1)+' / '+MISSION.length;
+ $('missionFill').style.width=((finished?MISSION.length:missionStep)/MISSION.length*100)+'%';
+ $('missionHint').classList.add('hidden');$('missionHintBtn').textContent='+ Afficher un indice';missionHintOpen=false;
+ if(finished){
+  $('missionPhase').textContent='Mission terminée';
+  $('missionTitle').textContent='Ton siphon est terminé !';
+  $('missionInstruction').textContent='Tu as construit son axe à l’aide de deux arcs et de trois parties droites.';
+  $('missionToolRow').innerHTML='<span class="mission-tool">Résultat théorique : 32,56 cm</span>';
+  $('missionAnswer').innerHTML='<div class="mission-finished"><h2>Construction validée</h2><p>Tu peux exporter ton dessin en PNG, en SVG ou l’enregistrer comme projet modifiable.</p><p><strong>À savoir :</strong> c’est un modèle géométrique pédagogique, pas un plan de fabrication normalisé.</p></div>';
+  $('missionHintBtn').classList.add('hidden');$('missionValidate').classList.add('hidden');$('missionFeedback').innerHTML='';
+  $('missionPrevious').disabled=false;return;
+ }
+ $('missionHintBtn').classList.remove('hidden');$('missionValidate').classList.remove('hidden');
+ const s=MISSION[missionStep];
+ $('missionPhase').textContent=s.phase;
+ $('missionTitle').textContent=s.title;
+ $('missionInstruction').textContent=s.body;
+ const toolLabel=missionToolName(s);
+ $('missionToolRow').innerHTML='<span class="mission-tool">'+htmlEsc(toolLabel)+'</span>'+(s.tool?'<button type="button" class="mission-prepare" id="missionPrepare">Préparer cet outil</button>':'');
+ $('missionPrepare')?.addEventListener('click',()=>prepareTool());
+ $('missionHint').textContent=s.hint;
+ let val='';
+ if(s.answerType==='choice'){
+  val='<div class="mission-answer"><label for="missionInput">Ta réponse</label><select id="missionInput">'+s.options.map(([v,lab])=>'<option value="'+htmlEsc(v)+'" '+(missionAnswers[missionStep]===v?'selected':'')+'>'+htmlEsc(lab)+'</option>').join('')+'</select></div>';
+ }else if(s.answerType==='number'){
+  val='<div class="mission-answer"><label for="missionInput">Ton résultat (arrondi au centième)</label><input id="missionInput" type="text" inputmode="decimal" autocomplete="off" value="'+htmlEsc(missionAnswers[missionStep]??'')+'" placeholder="Ex. : 9,42"><span class="unit">'+s.unit+'</span></div>';
+ }
+ $('missionAnswer').innerHTML=val;
+ $('missionInput')?.addEventListener(s.answerType==='choice'?'change':'input',e=>{missionAnswers[missionStep]=e.target.value;missionPassed[missionStep]=false;const b=$('missionValidate');b.textContent='Vérifier '+(s.answerType?'ma réponse':'mon tracé');b.classList.remove('done');$('missionFeedback').innerHTML='';saveLocal();});
+ const already=!!missionPassed[missionStep];
+ $('missionValidate').textContent=already?'Consigne suivante →':'Vérifier '+(s.answerType?'ma réponse':'mon tracé');
+ $('missionValidate').classList.toggle('done',already);
+ $('missionFeedback').innerHTML=already?'<div class="mission-feedback success">✓ Consigne validée. Tu peux continuer.</div>':'';
+ $('missionPrevious').disabled=missionStep===0;
+}
+function refreshMissionAfterDrawing(){
+ // Keep the current task visible and re-check when the pupil explicitly asks.
+ if(missionStep<MISSION.length&&missionPassed[missionStep]){
+  missionPassed[missionStep]=false;
+  $('missionValidate').classList.remove('done');$('missionValidate').textContent='Vérifier mon tracé';
+  $('missionFeedback').innerHTML='';
+ }
+}
+function validateMission(){
+ if(missionStep>=MISSION.length)return;
+ const s=MISSION[missionStep];
+ if(missionPassed[missionStep]){
+  // Check again before leaving: if a prerequisite was erased, don't silently advance.
+  if(!stepIsCorrect(missionStep)){
+   missionPassed[missionStep]=false;renderMission();$('missionFeedback').innerHTML='<div class="mission-feedback">Le dessin a changé. Vérifie à nouveau la consigne.</div>';return;
+  }
+  missionStep++;missionHintOpen=false;saveLocal();renderMission();return;
+ }
+ const success=stepIsCorrect(missionStep);
+ if(success){
+  missionPassed[missionStep]=true;saveLocal();
+  $('missionValidate').classList.add('done');$('missionValidate').textContent='Consigne suivante →';
+  $('missionFeedback').innerHTML='<div class="mission-feedback success">✓ Bien construit ! Ton tracé est validé.</div>';
+ }else{
+  $('missionFeedback').innerHTML='<div class="mission-feedback">'+htmlEsc(s.fail)+'</div>';
+ }
+}
+$('missionValidate').addEventListener('click',validateMission);
+$('missionHintBtn').addEventListener('click',()=>{
+ missionHintOpen=!missionHintOpen;
+ $('missionHint').classList.toggle('hidden',!missionHintOpen);
+ $('missionHintBtn').textContent=missionHintOpen?'− Masquer l’indice':'+ Afficher un indice';
+});
+$('missionPrevious').addEventListener('click',()=>{if(missionStep>0){missionStep--;saveLocal();renderMission();}});
+$('missionRestart').addEventListener('click',()=>{
+ if(!confirm('Recommencer la mission ? Cette action efface tous les tracés de la feuille et les validations.'))return;
+ pushUndo();shapes=[];selectedReference=null;missionStep=0;missionPassed=[];missionAnswers={};settings.margin=false;$('marginSwitch').checked=false;$('marginVisual').setAttribute('visibility','hidden');changed();renderMission();toast('Nouvelle mission prête.');
+});
+// On the eraser or ruler the feedback depends on the shape, never just on button clicks.
+renderMission();
 
-/* Démarrage : la page d'accueil */
-document.body.classList.add('at-home');
-renderHome();
+})();
 </script>
+</div>
 </body>
 </html>
